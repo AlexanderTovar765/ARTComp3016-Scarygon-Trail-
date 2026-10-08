@@ -1,0 +1,26 @@
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.suo
+*.pdb
+*.ilk
+*.obj
+*.log
+
+# Build output (anchored to repo root so vendored/SDL3/lib/x64 is NOT ignored)
+/build/
+/x64/
+/x86/
+/Debug/
+/Release/
+
+# Compiled binaries (but keep the bundled SDL3 library)
+*.exe
+*.exp
+*.lib
+!vendored/SDL3/lib/x64/SDL3.lib
+
+# General
+*.o
+.DS_Store
+Thumbs.db
