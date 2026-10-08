@@ -1,4 +1,5 @@
 #include "Game.h"
+<<<<<<< HEAD
 #include <algorithm>
 #include <iostream>
 
@@ -12,6 +13,10 @@ namespace {
     constexpr std::size_t kMaxChoices     = 4;      // matches keys 1-4 and the 2x2 button grid
 }
 
+=======
+#include <iostream>
+
+>>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
 Game::Game() = default;
 
 Game::~Game() {
@@ -48,9 +53,12 @@ bool Game::init(const char* title, int width, int height) {
         return false;
     }
 
+<<<<<<< HEAD
     loadSampleEvents();
     showEvent(0);
 
+=======
+>>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
     m_running = true;
     return true;
 }
@@ -68,6 +76,7 @@ void Game::handleInput() {
     while (SDL_PollEvent(&event)) {
         // SDL3 change: event type constants are now SDL_EVENT_* instead
         // of SDL_* (e.g. SDL_EVENT_QUIT instead of SDL_QUIT).
+<<<<<<< HEAD
         switch (event.type) {
         case SDL_EVENT_QUIT:
             m_running = false;
@@ -94,6 +103,18 @@ void Game::handleInput() {
 
         default:
             break;
+=======
+        if (event.type == SDL_EVENT_QUIT) {
+            m_running = false;
+        }
+
+        if (event.type == SDL_EVENT_KEY_DOWN) {
+            if (event.key.key == SDLK_ESCAPE) {
+                m_running = false;
+            }
+            // TODO: route number keys (1-4) to choice selection
+            // once the Event/Choice system exists.
+>>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
         }
     }
 }
@@ -102,6 +123,7 @@ void Game::update() {
     // TODO: Trail::advance(), Party state updates, etc. go here later.
 }
 
+<<<<<<< HEAD
 // ---------------------------------------------------------------------------
 // Bottom panel: events, buttons, input
 // ---------------------------------------------------------------------------
@@ -211,6 +233,8 @@ void Game::handleMouseClick(float x, float y) {
 // Rendering
 // ---------------------------------------------------------------------------
 
+=======
+>>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
 void Game::renderTop() {
     // Placeholder top panel: a plain rect so you can see the split
     // before any real wagon/trail art exists.
@@ -227,7 +251,11 @@ void Game::renderTop() {
 }
 
 void Game::renderBottom() {
+<<<<<<< HEAD
     const float topHeight = static_cast<float>(m_windowHeight) * kTopPanelRatio;
+=======
+    float topHeight = static_cast<float>(m_windowHeight) * kTopPanelRatio;
+>>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
 
     SDL_FRect bottomRect;
     bottomRect.x = 0;
@@ -238,6 +266,7 @@ void Game::renderBottom() {
     SDL_SetRenderDrawColor(m_renderer, 245, 240, 225, 255); // cream/journal page
     SDL_RenderFillRect(m_renderer, &bottomRect);
 
+<<<<<<< HEAD
     // Thin divider between the two panels
     SDL_FRect divider{ 0.0f, topHeight, static_cast<float>(m_windowWidth), 3.0f };
     SDL_SetRenderDrawColor(m_renderer, 120, 100, 70, 255);
@@ -259,6 +288,10 @@ void Game::renderBottom() {
     for (std::size_t i = 0; i < m_buttons.size(); ++i) {
         m_buttons[i].draw(m_renderer, m_text, static_cast<int>(i) + 1);
     }
+=======
+    // TODO: draw narrative text + choice buttons here. Text rendering
+    // needs SDL_ttf (or similar) added as a dependency later.
+>>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
 }
 
 void Game::render() {

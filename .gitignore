@@ -1,6 +1,7 @@
 # Visual Studio
 .vs/
 *.vcxproj.user
+<<<<<<< HEAD
 *.suo
 *.pdb
 *.ilk
@@ -19,6 +20,23 @@
 *.exp
 *.lib
 !vendored/SDL3/lib/x64/SDL3.lib
+=======
+x64/
+x86/
+Debug/
+Release/
+*.obj
+*.pdb
+*.ilk
+*.exe
+*.exp
+*.lib
+*.log
+
+# SDL3 (if built/vendored locally rather than installed system-wide)
+/vendored/SDL3/build/
+/vendored/SDL3/
+>>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
 
 # General
 *.o
