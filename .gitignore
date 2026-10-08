@@ -1,0 +1,23 @@
+# Visual Studio
+.vs/
+*.vcxproj.user
+x64/
+x86/
+Debug/
+Release/
+*.obj
+*.pdb
+*.ilk
+*.exe
+*.exp
+*.lib
+*.log
+
+# SDL3 (if built/vendored locally rather than installed system-wide)
+/vendored/SDL3/build/
+/vendored/SDL3/
+
+# General
+*.o
+.DS_Store
+Thumbs.db
