@@ -1,14 +1,13 @@
 #pragma once
 #include <SDL3/SDL.h>
-<<<<<<< HEAD
 #include <cstddef>
+#include <string>
 #include <vector>
 
 #include "Button.h"
-#include "Event.h"
+#include "Party.h"
 #include "TextRenderer.h"
-=======
->>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
+#include "Trail.h"
 
 class Game {
 public:
@@ -19,6 +18,14 @@ public:
     void run();
 
 private:
+    // Which screen the bottom panel is showing. Button presses mean different things in each.
+    enum class Phase {
+        Event,       // an event with up to 4 choices
+        Result,      // what your choice did, with a Continue button
+        DaySummary,  // end-of-day recap
+        Ending       // death, end of content, or a load error
+    };
+
     void handleInput();
     void update();
     void renderTop();
@@ -26,17 +33,25 @@ private:
     void render();
     void shutdown();
 
-<<<<<<< HEAD
-    // Bottom panel: narrative text and numbered choice buttons
-    void loadSampleEvents();
-    void showEvent(std::size_t index);
-    void layoutButtons();
+    // Game flow
+    void startGame();
+    void showCurrentEvent();
+    void showDaySummary();
+    void showEnding(const std::string& text, bool canRestart);
+    void onEventChoice(std::size_t index);
+    void onResultContinue();
+    void onDaySummaryContinue();
     void selectChoice(std::size_t index);
+
+    // Bottom panel
+    void showScreen(const std::string& text, const std::vector<std::string>& buttonLabels);
+    void layoutButtons();
     void handleMouseMotion(float x, float y);
     void handleMouseClick(float x, float y);
 
-=======
->>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
+    // Top panel
+    void drawStatBar(const char* label, int value, float y, SDL_Color fill);
+
     SDL_Window*   m_window   = nullptr;
     SDL_Renderer* m_renderer = nullptr;
 
@@ -45,15 +60,15 @@ private:
     int m_windowWidth  = 0;
     int m_windowHeight = 0;
 
-<<<<<<< HEAD
     TextRenderer        m_text;
-    std::vector<Event>  m_events;
+    Party               m_party;
+    Trail               m_trail;
+    Phase               m_phase = Phase::Event;
+    std::string         m_narrative;           // text shown in the bottom panel
     std::vector<Button> m_buttons;
-    std::size_t         m_currentEvent = 0;
-    float               m_buttonsTop   = 0.0f;  // y of the first button row, set by layoutButtons()
+    float               m_buttonsTop = 0.0f;   // y of the first button row, set by layoutButtons()
+    bool                m_canRestart = false;  // does the Ending screen offer "Play again"?
 
-=======
->>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
     // Split ratio: top panel takes this fraction of the window height.
     // Matches the proposal's ~60% top / ~40% bottom layout.
     static constexpr float kTopPanelRatio = 0.6f;

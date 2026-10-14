@@ -1,9 +1,10 @@
 #include "Game.h"
-<<<<<<< HEAD
 #include <algorithm>
 #include <iostream>
 
 namespace {
+    const char* const kEventFile = "data/events.txt";  // relative to the working directory
+
     // Bottom panel layout (pixels)
     constexpr float       kPadding        = 24.0f;
     constexpr float       kButtonHeight   = 52.0f;
@@ -11,12 +12,15 @@ namespace {
     constexpr float       kTextGap        = 12.0f;  // space between narrative text and buttons
     constexpr float       kNarrativeScale = 2.0f;   // 8px font drawn at 16px
     constexpr std::size_t kMaxChoices     = 4;      // matches keys 1-4 and the 2x2 button grid
+
+    // Top panel (HUD) layout
+    constexpr float kHeadingScale = 3.0f;
+    constexpr float kStatScale    = 2.0f;
+    constexpr float kStatBarX     = 140.0f;
+    constexpr float kStatBarWidth = 240.0f;
+    constexpr float kStatBarHeight = 16.0f;
 }
 
-=======
-#include <iostream>
-
->>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
 Game::Game() = default;
 
 Game::~Game() {
@@ -53,12 +57,20 @@ bool Game::init(const char* title, int width, int height) {
         return false;
     }
 
-<<<<<<< HEAD
-    loadSampleEvents();
-    showEvent(0);
+    const bool loaded = m_trail.loadFromFile(kEventFile);
+    for (const std::string& warning : m_trail.getWarnings()) {
+        std::cerr << "[events] " << warning << "\n";
+    }
 
-=======
->>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
+    if (loaded) {
+        startGame();
+    } else {
+        // Show the problem in the window instead of crashing or closing silently.
+        showEnding(std::string("Could not load ") + kEventFile + ". Make sure a data folder "
+                   "containing events.txt sits next to the game, then start it again. "
+                   "Details are in the console window.", false);
+    }
+
     m_running = true;
     return true;
 }
@@ -76,7 +88,6 @@ void Game::handleInput() {
     while (SDL_PollEvent(&event)) {
         // SDL3 change: event type constants are now SDL_EVENT_* instead
         // of SDL_* (e.g. SDL_EVENT_QUIT instead of SDL_QUIT).
-<<<<<<< HEAD
         switch (event.type) {
         case SDL_EVENT_QUIT:
             m_running = false;
@@ -103,73 +114,139 @@ void Game::handleInput() {
 
         default:
             break;
-=======
-        if (event.type == SDL_EVENT_QUIT) {
-            m_running = false;
-        }
-
-        if (event.type == SDL_EVENT_KEY_DOWN) {
-            if (event.key.key == SDLK_ESCAPE) {
-                m_running = false;
-            }
-            // TODO: route number keys (1-4) to choice selection
-            // once the Event/Choice system exists.
->>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
         }
     }
 }
 
 void Game::update() {
-    // TODO: Trail::advance(), Party state updates, etc. go here later.
+    // Nothing runs on a timer yet: the game advances when the player picks a button.
 }
 
-<<<<<<< HEAD
 // ---------------------------------------------------------------------------
-// Bottom panel: events, buttons, input
+// Game flow: Event -> Result -> (next Event | DaySummary) -> ... -> Ending
 // ---------------------------------------------------------------------------
 
-void Game::loadSampleEvents() {
-    // PLACEHOLDER content so the UI has something to show. Drafted with AI
-    // assistance (logged in docs/ai-dev-log.md). Week 3 replaces this with
-    // events loaded from files in data/.
-    m_events.emplace_back(
-        "You have reached the Pecos River. The river is wide, brown, and has not "
-        "indicated whether it intends to be a problem.",
-        std::vector<Choice>{
-            Choice("Ford the river"),
-            Choice("Caulk the wagon and float it"),
-            Choice("Wait for conditions to improve"),
-            Choice("Ask the river what it wants")
-        });
-
-    m_events.emplace_back(
-        "One of your oxen has stopped walking. It is looking at you the way a man "
-        "looks at a bad investment.",
-        std::vector<Choice>{
-            Choice("Give the ox a motivational speech"),
-            Choice("Redistribute its load"),
-            Choice("Leave it a note and move on")
-        });
-
-    m_events.emplace_back(
-        "A stranger at the edge of camp offers to repair your wagon wheel for free. "
-        "He has too many teeth.",
-        std::vector<Choice>{
-            Choice("Accept his offer"),
-            Choice("Repair it yourself")
-        });
+void Game::startGame() {
+    m_party.reset();
+    m_trail.reset();
+    showCurrentEvent();
 }
 
-void Game::showEvent(std::size_t index) {
-    if (m_events.empty() || index >= m_events.size()) return;
+void Game::showCurrentEvent() {
+    const Event* event = m_trail.currentEvent();
 
-    m_currentEvent = index;
+    if (!event) {
+        // A gap in the data file. Don't crash: say which slot is empty and let play continue.
+        m_phase = Phase::Result;
+        showScreen("No event is written for Day " + std::to_string(m_trail.currentDay()) + ", " +
+                   partName(m_trail.currentPart()) + ". Add one to " + kEventFile +
+                   ". The day carries on without it.", { "Continue" });
+        return;
+    }
+
+    m_phase = Phase::Event;
+    std::vector<std::string> labels;
+    for (const Choice& choice : event->getChoices()) {
+        labels.push_back(choice.getLabel());
+    }
+    showScreen(event->getText(), labels);
+}
+
+void Game::onEventChoice(std::size_t index) {
+    const Event* event = m_trail.currentEvent();
+    if (!event || index >= event->getChoices().size()) return;
+
+    const Choice& choice = event->getChoices()[index];
+    const Effects effects = choice.getEffects();
+
+    m_party.apply(effects);
+    const Effects upkeep = m_party.advanceTime();  // the party eats (and may starve)
+
+    std::cout << "Day " << m_trail.currentDay() << ", " << partName(m_trail.currentPart())
+              << ": chose [" << (index + 1) << "] " << choice.getLabel()
+              << " (" << effects.describe() << ")\n";
+
+    std::string text = choice.getResultText() + " (" + effects.describe() + ") "
+                     + "The party eats (" + upkeep.describe() + ").";
+    if (upkeep.health < 0) {
+        text += " The party is starving.";
+    }
+
+    m_phase = Phase::Result;
+    showScreen(text, { "Continue" });
+}
+
+void Game::onResultContinue() {
+    if (!m_party.isAlive()) {
+        showEnding(m_party.causeOfDeath() + " Your journey ends on Day " +
+                   std::to_string(m_trail.currentDay()) + ", " + partName(m_trail.currentPart()) + ".", true);
+        return;
+    }
+
+    if (m_trail.isLastPartOfDay()) {
+        showDaySummary();
+    } else {
+        m_trail.advance();
+        showCurrentEvent();
+    }
+}
+
+void Game::showDaySummary() {
+    m_phase = Phase::DaySummary;
+    showScreen("Day " + std::to_string(m_trail.currentDay()) + " is over. Food " +
+               std::to_string(m_party.getFood()) + ", Health " + std::to_string(m_party.getHealth()) +
+               ", Sanity " + std::to_string(m_party.getSanity()) + ", Wagon " +
+               std::to_string(m_party.getWagon()) + ". The oxen are still watching.", { "Continue" });
+}
+
+void Game::onDaySummaryContinue() {
+    if (!m_trail.hasDay(m_trail.currentDay() + 1)) {
+        showEnding("The trail ends here, for now. You survived to the end of Day " +
+                   std::to_string(m_trail.currentDay()) + ".", true);
+        return;
+    }
+    m_trail.advance();
+    showCurrentEvent();
+}
+
+void Game::showEnding(const std::string& text, bool canRestart) {
+    m_phase = Phase::Ending;
+    m_canRestart = canRestart;
+    if (canRestart) {
+        showScreen(text, { "Play again", "Quit" });
+    } else {
+        showScreen(text, { "Quit" });
+    }
+}
+
+void Game::selectChoice(std::size_t index) {
+    if (index >= m_buttons.size()) return;  // key pressed for a button this screen doesn't have
+
+    switch (m_phase) {
+    case Phase::Event:      onEventChoice(index);    break;
+    case Phase::Result:     onResultContinue();      break;
+    case Phase::DaySummary: onDaySummaryContinue();  break;
+    case Phase::Ending:
+        if (m_canRestart && index == 0) {
+            startGame();
+        } else {
+            m_running = false;
+        }
+        break;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Bottom panel: text, buttons, mouse
+// ---------------------------------------------------------------------------
+
+void Game::showScreen(const std::string& text, const std::vector<std::string>& buttonLabels) {
+    m_narrative = text;
     m_buttons.clear();
 
     // Rects are placeholders here; layoutButtons() positions them.
-    const std::vector<Choice>& choices = m_events[index].getChoices();
-    for (std::size_t i = 0; i < choices.size() && i < kMaxChoices; ++i) {
-        m_buttons.emplace_back(choices[i].getLabel(), SDL_FRect{ 0.0f, 0.0f, 0.0f, 0.0f });
+    for (std::size_t i = 0; i < buttonLabels.size() && i < kMaxChoices; ++i) {
+        m_buttons.emplace_back(buttonLabels[i], SDL_FRect{ 0.0f, 0.0f, 0.0f, 0.0f });
     }
     layoutButtons();
 
@@ -204,16 +281,6 @@ void Game::layoutButtons() {
     }
 }
 
-void Game::selectChoice(std::size_t index) {
-    if (index >= m_buttons.size()) return;  // key pressed for a choice this event doesn't have
-
-    std::cout << "Chose [" << (index + 1) << "]: " << m_buttons[index].getLabel() << "\n";
-
-    // TODO (Week 3): apply the Choice's effects to the Party, then ask the Trail
-    // for the next Event. For now just cycle through the sample events.
-    showEvent((m_currentEvent + 1) % m_events.size());
-}
-
 void Game::handleMouseMotion(float x, float y) {
     for (Button& button : m_buttons) {
         button.setHovered(button.contains(x, y));
@@ -233,11 +300,31 @@ void Game::handleMouseClick(float x, float y) {
 // Rendering
 // ---------------------------------------------------------------------------
 
-=======
->>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
+void Game::drawStatBar(const char* label, int value, float y, SDL_Color fill) {
+    // Label
+    SDL_SetRenderDrawColor(m_renderer, 60, 40, 30, 255);
+    m_text.drawLine(m_renderer, label, kPadding, y, kStatScale);
+
+    // Empty track
+    SDL_FRect track{ kStatBarX, y, kStatBarWidth, kStatBarHeight };
+    SDL_SetRenderDrawColor(m_renderer, 185, 165, 125, 255);
+    SDL_RenderFillRect(m_renderer, &track);
+
+    // Filled part, proportional to the stat (0..100)
+    const float fraction = static_cast<float>(std::max(0, std::min(value, Party::kMaxStat))) /
+                           static_cast<float>(Party::kMaxStat);
+    SDL_FRect filled{ kStatBarX, y, kStatBarWidth * fraction, kStatBarHeight };
+    SDL_SetRenderDrawColor(m_renderer, fill.r, fill.g, fill.b, 255);
+    SDL_RenderFillRect(m_renderer, &filled);
+
+    // Border and number
+    SDL_SetRenderDrawColor(m_renderer, 90, 70, 50, 255);
+    SDL_RenderRect(m_renderer, &track);
+    SDL_SetRenderDrawColor(m_renderer, 60, 40, 30, 255);
+    m_text.drawLine(m_renderer, std::to_string(value), kStatBarX + kStatBarWidth + 12.0f, y, kStatScale);
+}
+
 void Game::renderTop() {
-    // Placeholder top panel: a plain rect so you can see the split
-    // before any real wagon/trail art exists.
     SDL_FRect topRect;
     topRect.x = 0;
     topRect.y = 0;
@@ -247,15 +334,23 @@ void Game::renderTop() {
     SDL_SetRenderDrawColor(m_renderer, 210, 190, 150, 255); // parchment tan
     SDL_RenderFillRect(m_renderer, &topRect);
 
-    // TODO: draw wagon sprite, trail dots, party row, inventory box here.
+    // Which day and part of the day we are in
+    const std::string heading = "Day " + std::to_string(m_trail.currentDay()) + " - " +
+                                partName(m_trail.currentPart());
+    SDL_SetRenderDrawColor(m_renderer, 60, 40, 30, 255);
+    m_text.drawLine(m_renderer, heading, kPadding, kPadding, kHeadingScale);
+
+    // The party's four stats
+    drawStatBar("Food",   m_party.getFood(),   84.0f,  SDL_Color{ 205, 150,  55, 255 });
+    drawStatBar("Health", m_party.getHealth(), 120.0f, SDL_Color{ 190,  60,  50, 255 });
+    drawStatBar("Sanity", m_party.getSanity(), 156.0f, SDL_Color{ 115,  90, 170, 255 });
+    drawStatBar("Wagon",  m_party.getWagon(),  192.0f, SDL_Color{ 120,  90,  60, 255 });
+
+    // TODO: wagon sprite, trail dots and party portraits go on the right-hand side.
 }
 
 void Game::renderBottom() {
-<<<<<<< HEAD
     const float topHeight = static_cast<float>(m_windowHeight) * kTopPanelRatio;
-=======
-    float topHeight = static_cast<float>(m_windowHeight) * kTopPanelRatio;
->>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
 
     SDL_FRect bottomRect;
     bottomRect.x = 0;
@@ -266,32 +361,25 @@ void Game::renderBottom() {
     SDL_SetRenderDrawColor(m_renderer, 245, 240, 225, 255); // cream/journal page
     SDL_RenderFillRect(m_renderer, &bottomRect);
 
-<<<<<<< HEAD
     // Thin divider between the two panels
     SDL_FRect divider{ 0.0f, topHeight, static_cast<float>(m_windowWidth), 3.0f };
     SDL_SetRenderDrawColor(m_renderer, 120, 100, 70, 255);
     SDL_RenderFillRect(m_renderer, &divider);
 
     // Narrative text, limited to the space above the buttons
-    if (m_currentEvent < m_events.size()) {
-        const float textTop   = topHeight + kPadding;
-        const float available = m_buttonsTop - kTextGap - textTop;
-        const int   maxLines  = std::max(1, static_cast<int>(available / m_text.lineHeight(kNarrativeScale)));
+    const float textTop   = topHeight + kPadding;
+    const float available = m_buttonsTop - kTextGap - textTop;
+    const int   maxLines  = std::max(1, static_cast<int>(available / m_text.lineHeight(kNarrativeScale)));
 
-        SDL_SetRenderDrawColor(m_renderer, 60, 40, 30, 255);
-        m_text.drawWrapped(m_renderer, m_events[m_currentEvent].getText(),
-                           kPadding, textTop,
-                           static_cast<float>(m_windowWidth) - 2.0f * kPadding,
-                           kNarrativeScale, maxLines);
-    }
+    SDL_SetRenderDrawColor(m_renderer, 60, 40, 30, 255);
+    m_text.drawWrapped(m_renderer, m_narrative,
+                       kPadding, textTop,
+                       static_cast<float>(m_windowWidth) - 2.0f * kPadding,
+                       kNarrativeScale, maxLines);
 
     for (std::size_t i = 0; i < m_buttons.size(); ++i) {
         m_buttons[i].draw(m_renderer, m_text, static_cast<int>(i) + 1);
     }
-=======
-    // TODO: draw narrative text + choice buttons here. Text rendering
-    // needs SDL_ttf (or similar) added as a dependency later.
->>>>>>> 8335505f5d66bfc5275628be58ae86571016e2e1
 }
 
 void Game::render() {
