@@ -1,0 +1,175 @@
+# The Scarygon Trail - event data
+#
+# FORMAT
+#   [EVENT]   starts an event.   Keys: day, part, text
+#   [CHOICE]  starts a choice for the event above (1 to 4 per event).
+#             Keys: label, result, food, health, sanity, wagon
+#   part is one of: Dawn, Mid-Morning, Noon, Evening, Night
+#   Effects are whole numbers: positive helps the party, negative hurts it.
+#   Leave an effect out and it is 0. Stats run from 0 to 100.
+#   Lines starting with # are comments. Use plain ASCII (straight quotes).
+#   Keep text short: about 200 characters for text, 46 for a label.
+#   Every event slot (each day x each part) should have exactly one event.
+
+# ======================================================================
+# DAY 1
+# ======================================================================
+
+[EVENT]
+day = 1
+part = Dawn
+text = You wake before the sun. The oxen are already awake and looking at you. They have been looking at you for some time.
+
+[CHOICE]
+label = Feed the oxen first
+result = The oxen eat. They do not thank you, but the staring stops, which counts for something.
+food = -5
+sanity = 3
+wagon = 5
+
+[CHOICE]
+label = Cook a hot breakfast for the family
+result = Everyone eats well. Your son asks whether the oxen will be eating anyone later. You say no. He seems unconvinced.
+food = -8
+health = 8
+sanity = 2
+
+[CHOICE]
+label = Skip breakfast and break camp early
+result = You are on the trail before the dew dries. Your stomach files a formal complaint.
+health = -6
+sanity = -2
+
+[CHOICE]
+label = Ask the oxen what they are looking at
+result = The oxen turn in unison toward the tree line. You decide not to ask a follow-up question.
+sanity = -8
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 1
+part = Mid-Morning
+text = A man at the roadside is selling maps. They are maps of a place you have never heard of. He insists it is where you are going.
+
+[CHOICE]
+label = Buy a map
+result = The map is detailed and completely accurate, which is the worst part.
+food = -4
+sanity = -6
+wagon = 10
+
+[CHOICE]
+label = Haggle down the price
+result = He agrees to half price far too quickly. His smile does not move at any point during the exchange.
+food = -2
+sanity = -3
+wagon = 5
+
+[CHOICE]
+label = Decline and keep moving
+result = He waves. He is still waving when you lose sight of him, which should not be possible on flat ground.
+sanity = -5
+
+[CHOICE]
+label = Ask where he got the maps
+result = He says the maps got him. You thank him for his time. He gives you a jar of jerky as an apology.
+food = 8
+sanity = -10
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 1
+part = Noon
+text = A deer stands in the middle of the road. It is calm and makes direct eye contact. It does not seem to be afraid of you.
+
+[CHOICE]
+label = Shoot the deer
+result = The shot is clean. The deer falls over as though it expected this. You will eat well tonight.
+food = 20
+sanity = -6
+
+[CHOICE]
+label = Wait for it to move
+result = It does not move. After an hour you both agree to let this go. The family naps in the shade.
+food = -3
+health = 4
+sanity = 3
+
+[CHOICE]
+label = Offer it some of your food
+result = It eats and leaves a small stack of coins on the ground. You are not sure what to make of this.
+food = -8
+sanity = 5
+
+[CHOICE]
+label = Challenge the deer to a duel
+result = The deer wins. It politely does not finish the job and takes your hat as a trophy.
+health = -12
+sanity = -4
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 1
+part = Evening
+text = Your son has skipped three meals and has taken up Satanism in an attempt to curse you. He has drawn a circle in the dirt and is waiting for you to notice.
+
+[CHOICE]
+label = Feed him a proper meal
+result = He eats everything and quietly renounces Satan. The circle remains, but it looks tired.
+food = -10
+sanity = 8
+
+[CHOICE]
+label = Ask what the curse involves
+result = It is mostly about your hair and your parenting. He feels heard, and the curse is downgraded to a strongly worded letter.
+food = -2
+sanity = 4
+
+[CHOICE]
+label = Pretend you did not see it
+result = The curse takes effect. Your boots are now slightly too small, permanently.
+health = -8
+sanity = -4
+
+[CHOICE]
+label = Step into the circle
+result = It is surprisingly warm. The wagon wheel begins to spin on its own, which would help if it were not also on fire.
+health = 6
+sanity = -8
+wagon = -15
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 1
+part = Night
+text = Something is standing at the edge of the firelight. It is wearing your good coat and holding very still.
+
+[CHOICE]
+label = Offer it a seat by the fire
+result = It sits, says nothing, and eats most of the stew. At dawn it is gone and the coat is returned, slightly improved.
+food = -12
+health = 6
+sanity = 4
+
+[CHOICE]
+label = Throw a boot at it
+result = You hit it. It collapses into a pile of what you hope are leaves, and you pull a muscle.
+health = -5
+sanity = -6
+
+[CHOICE]
+label = Wake the family and leave now
+result = Everyone is safe. Everyone is also very tired, and the wagon takes the dark road badly.
+health = -8
+sanity = 3
+wagon = -8
+
+[CHOICE]
+label = Stay perfectly still until it leaves
+result = It leaves around dawn. You spent the whole night not blinking, which your eyes will bring up later.
+health = -6
+sanity = -2
