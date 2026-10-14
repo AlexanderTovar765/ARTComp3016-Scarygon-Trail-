@@ -56,8 +56,8 @@
       <AdditionalDependencies>SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(ProjectDir)vendored\SDL3\lib\x64\SDL3.dll" "$(OutDir)"</Command>
-      <Message>Copying SDL3.dll next to the executable</Message>
+      <Command>xcopy /Y /D "$(ProjectDir)vendored\SDL3\lib\x64\SDL3.dll" "$(OutDir)"&#x0D;&#x0A;xcopy /Y /D /E /I "$(ProjectDir)data" "$(OutDir)data"</Command>
+      <Message>Copying SDL3.dll and the data folder next to the executable</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -83,12 +83,19 @@
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Button.cpp" />
     <ClCompile Include="src\TextRenderer.cpp" />
+    <ClCompile Include="src\Effects.cpp" />
+    <ClCompile Include="src\Party.cpp" />
+    <ClCompile Include="src\Trail.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\Button.h" />
     <ClInclude Include="src\Event.h" />
     <ClInclude Include="src\TextRenderer.h" />
+    <ClInclude Include="src\Effects.h" />
+    <ClInclude Include="src\Party.h" />
+    <ClInclude Include="src\TimeOfDay.h" />
+    <ClInclude Include="src\Trail.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
