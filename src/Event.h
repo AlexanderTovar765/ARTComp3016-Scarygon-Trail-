@@ -3,29 +3,40 @@
 #include <utility>
 #include <vector>
 
-// One option the player can pick for an Event.
-// Week 3: add resource/sanity effects and apply(Party&).
+#include "Effects.h"
+#include "TimeOfDay.h"
+
+// One option the player can pick: the button label, what happens, and how it
+// changes the party's stats.
 class Choice {
 public:
-    explicit Choice(std::string label) : m_label(std::move(label)) {}
+    Choice(std::string label, std::string resultText, Effects effects)
+        : m_label(std::move(label)), m_resultText(std::move(resultText)), m_effects(effects) {}
 
-    const std::string& getLabel() const { return m_label; }
+    const std::string& getLabel() const      { return m_label; }
+    const std::string& getResultText() const { return m_resultText; }
+    const Effects&     getEffects() const    { return m_effects; }
 
 private:
     std::string m_label;
+    std::string m_resultText;
+    Effects     m_effects;
 };
 
-// A narrative moment on the trail: some text plus the choices offered.
-// Week 3: load these from files in data/ instead of building them in code.
+// A narrative moment: it belongs to one part of one day and offers up to 4 Choices.
 class Event {
 public:
-    Event(std::string text, std::vector<Choice> choices)
-        : m_text(std::move(text)), m_choices(std::move(choices)) {}
+    Event(int day, TimePart part, std::string text, std::vector<Choice> choices)
+        : m_day(day), m_part(part), m_text(std::move(text)), m_choices(std::move(choices)) {}
 
-    const std::string& getText() const { return m_text; }
+    int getDay() const                         { return m_day; }
+    TimePart getPart() const                   { return m_part; }
+    const std::string& getText() const         { return m_text; }
     const std::vector<Choice>& getChoices() const { return m_choices; }
 
 private:
+    int m_day;
+    TimePart m_part;
     std::string m_text;
     std::vector<Choice> m_choices;
 };
