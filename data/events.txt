@@ -173,3 +173,329 @@ label = Stay perfectly still until it leaves
 result = It leaves around dawn. You spent the whole night not blinking, which your eyes will bring up later.
 health = -6
 sanity = -2
+
+# ======================================================================
+# DAY 2
+# ======================================================================
+
+[EVENT]
+day = 2
+part = Dawn
+text = Someone has repacked the wagon overnight. Everything is tidy and labelled. You did not do this, and neither did anyone else.
+
+[CHOICE]
+label = Thank whoever did it, out loud
+result = Something in the dark clears its throat politely. The wheels are, in fact, better balanced.
+sanity = -4
+wagon = 10
+
+[CHOICE]
+label = Unpack and repack everything
+result = It takes two hours. You find nothing wrong, which bothers you more than finding something would have.
+food = -3
+sanity = -3
+wagon = 4
+
+[CHOICE]
+label = Take inventory
+result = The count is correct. It is correct in a way that suggests it was counted by something that enjoys counting.
+food = 6
+sanity = -5
+
+[CHOICE]
+label = Leave it exactly as it is
+result = You drive on. Everything stays in its place all day, even over rough ground, which feels like a threat.
+sanity = -2
+wagon = 6
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 2
+part = Mid-Morning
+text = A river crossing. One sign says SHALLOW. A second sign, lower down and in smaller writing, says NOT ANYMORE.
+
+[CHOICE]
+label = Ford it
+result = The water reaches the axles and your confidence. The wagon makes it. The oxen look vindicated.
+sanity = 3
+wagon = -12
+
+[CHOICE]
+label = Pay the ferryman
+result = He accepts your payment and offers no change, no name, and no eye contact. The crossing is very smooth.
+food = -10
+sanity = -3
+
+[CHOICE]
+label = Build a raft
+result = It floats for a distance you could call ambitious. Everyone gets across, damp and reconsidering their choices.
+health = -6
+sanity = 3
+wagon = -4
+
+[CHOICE]
+label = Read the second sign again
+result = It now says something else. You decide not to read the third sign.
+sanity = -8
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 2
+part = Noon
+text = A camp of travellers waves you over for lunch. They are all smiling at the same speed.
+
+[CHOICE]
+label = Join them for lunch
+result = The food is excellent. They ask which of you is the youngest, purely as small talk.
+food = 15
+health = 5
+sanity = -9
+
+[CHOICE]
+label = Trade supplies
+result = You swap spare wheel hubs for sacks of flour. They count your family twice, and then once more to be sure.
+food = 10
+sanity = -3
+wagon = -6
+
+[CHOICE]
+label = Wave and keep going
+result = They wave until you are out of sight, and for a little while after that.
+sanity = -3
+
+[CHOICE]
+label = Ask why they smile at the same speed
+result = They stop. They resume. Nobody answers, but someone passes you a pie as a gesture of goodwill.
+food = 8
+sanity = -10
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 2
+part = Evening
+text = The oxen have formed a circle and are facing inward. Nobody asked them to. It looks like a meeting.
+
+[CHOICE]
+label = Interrupt them
+result = They disperse, offended. One of them kicks your bucket on the way out, with some precision.
+sanity = 2
+wagon = -4
+
+[CHOICE]
+label = Stand quietly at the back
+result = Whatever they were discussing is resolved. The oxen are calmer. You are not.
+sanity = -7
+wagon = 10
+
+[CHOICE]
+label = Offer them extra oats
+result = They accept the oats as an opening bid. Negotiations continue until sunset.
+food = -6
+sanity = 2
+wagon = 8
+
+[CHOICE]
+label = Take notes
+result = The oxen see you writing and stop. When they start again, it is in a language you can read.
+sanity = -9
+wagon = 5
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 2
+part = Night
+text = A voice in the dark says it is lost and asks to borrow your wagon for a while. It sounds like you.
+
+[CHOICE]
+label = Lend it the wagon
+result = It returns at dawn, thanks you in your own voice, and leaves some snacks. There is also a cupholder now.
+food = 5
+sanity = -6
+wagon = -6
+
+[CHOICE]
+label = Refuse politely
+result = It says it understands, and that it will ask again tomorrow, with more of you.
+sanity = -6
+
+[CHOICE]
+label = Offer directions instead
+result = Your directions are excellent. It leaves satisfied. In the morning there are footprints all around the wagon, pointing outward.
+health = 5
+sanity = -3
+
+[CHOICE]
+label = Ask it for directions
+result = It knows exactly where you are going. It says it will be there first, and marks a shortcut on your map.
+sanity = -10
+wagon = 8
+
+# ======================================================================
+# DAY 3
+# ======================================================================
+
+[EVENT]
+day = 3
+part = Dawn
+text = The trail has been repaired overnight. The new road is smooth, clearly meant for you, and goes in one direction only.
+
+[CHOICE]
+label = Follow the new road
+result = It is the best road you have ever travelled. It is also faintly warm, and it is not the road you were on.
+sanity = -8
+wagon = 12
+
+[CHOICE]
+label = Stay on the old trail
+result = The old trail is rocky and unmoved by your loyalty. The new road watches you go.
+health = -4
+sanity = 4
+wagon = -8
+
+[CHOICE]
+label = Dig up a piece of the new road
+result = Underneath is more road. You fill the hole in, say nothing to the family, and keep the seed corn you found.
+food = 10
+sanity = -6
+
+[CHOICE]
+label = Ask the oxen which way to go
+result = They have been waiting for you to ask. They go left. Then each of them looks at you, one after the other.
+sanity = -4
+wagon = 6
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 3
+part = Mid-Morning
+text = The map man is at the next roadside, selling a different map. It shows this exact spot, with a small red X on your wagon.
+
+[CHOICE]
+label = Buy the map
+result = The X moves when you do. According to the date on the map, it has been accurate for some time.
+food = -4
+sanity = -8
+wagon = 8
+
+[CHOICE]
+label = Ask what the X means
+result = He says it is either treasure or a warning. He sells both versions, at different prices.
+food = -3
+sanity = -4
+wagon = 4
+
+[CHOICE]
+label = Drive through his stall
+result = He does not seem angry. He seems relieved. His maps scatter like startled birds.
+sanity = 8
+wagon = -8
+
+[CHOICE]
+label = Buy him lunch
+result = He eats with the focus of a man who has not eaten in some time. It is the first normal thing he has done.
+food = -8
+health = 4
+sanity = 10
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 3
+part = Noon
+text = The deer from Day 1 is back. It has brought friends, and one of them is wearing your hat.
+
+[CHOICE]
+label = Ask for your hat back
+result = The deer in the hat bows and returns it. Everyone agrees this went well, except possibly the hat.
+food = -4
+sanity = 6
+
+[CHOICE]
+label = Shoot the one in the hat
+result = It falls over politely. The others hold a brief, dignified silence and then give you directions.
+food = 18
+sanity = -10
+
+[CHOICE]
+label = Share lunch with the herd
+result = They eat all of it in a neat line and leave a stack of coins larger than last time. Trade seems possible.
+food = -12
+sanity = 6
+wagon = 6
+
+[CHOICE]
+label = Challenge the hat deer to a rematch
+result = It wins again. You now have a rivalry, which is somehow better than having nothing.
+health = -10
+sanity = 6
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 3
+part = Evening
+text = Your son has drawn a second circle, larger than the first. He says this one is for the whole family, and that it comes with snacks.
+
+[CHOICE]
+label = Join the family circle
+result = It is warm, there are snacks, and the curse has been rebranded as a team-building exercise.
+food = 6
+health = 8
+sanity = -6
+
+[CHOICE]
+label = Ask who the snacks are from
+result = He says they were donations. The donor is standing right behind you, and has been for a while.
+food = 10
+sanity = -12
+
+[CHOICE]
+label = Draw a better circle
+result = Yours is neater. He studies it with respect. The curse, he explains, is now technically your problem.
+health = -4
+sanity = 6
+
+[CHOICE]
+label = Tell him he is grounded
+result = It works for about nine minutes. Then the wagon is grounded too, in the sense of stuck in mud.
+sanity = 5
+wagon = -12
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 3
+part = Night
+text = The edge of the firelight is full of figures. All of them are wearing your coat. The first one has brought a chair.
+
+[CHOICE]
+label = Offer them all a seat
+result = They sit. They are polite, hungry, and gone by morning, leaving only a pile of coats too big to be yours.
+food = -15
+health = 8
+sanity = 8
+
+[CHOICE]
+label = Hand out the coats
+result = Each takes a coat and leaves, thoughtfully, in a different direction. You no longer own a coat.
+health = -8
+sanity = 8
+wagon = 4
+
+[CHOICE]
+label = Drive through the night
+result = Nothing follows you. That is not reassuring. At dawn the oxen are lathered, proud, and refusing eye contact.
+health = -6
+sanity = 6
+wagon = -15
+
+[CHOICE]
+label = Stare back until dawn
+result = At first light they are gone and you have won, on a technicality. Your eyes disagree.
+health = -10
+sanity = -4

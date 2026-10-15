@@ -255,6 +255,10 @@ bool Trail::hasDay(int day) const {
     return it != m_events.end() && it->first.first == day;
 }
 
+int Trail::lastDay() const {
+    return m_events.empty() ? 1 : m_events.rbegin()->first.first;
+}
+
 void Trail::advance() {
     if (m_part == TimePart::Night) {
         m_part = TimePart::Dawn;

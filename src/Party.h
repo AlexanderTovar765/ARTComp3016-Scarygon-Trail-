@@ -9,7 +9,10 @@ class Party {
 public:
     static constexpr int kMaxStat          = 100;
     static constexpr int kStartFood        = 60;
-    static constexpr int kFoodPerPart      = 3;   // eaten automatically after each event
+    // The trail's toll, taken after every event (one part of the day):
+    static constexpr int kFoodPerPart      = 3;   // the party eats
+    static constexpr int kSanityPerPart    = 4;   // the trail wears on everyone
+    static constexpr int kWagonPerPart     = 2;   // wear and tear
     static constexpr int kStarvationDamage = 10;  // health lost per part while food is 0
 
     Party() { reset(); }
@@ -19,8 +22,9 @@ public:
     // Applies a Choice's effects, keeping every stat within 0..kMaxStat.
     void apply(const Effects& effects);
 
-    // End-of-part upkeep: the party eats, and starves if the food has run out.
-    // Returns the change that actually happened so it can be shown to the player.
+    // End-of-part upkeep: the party eats, the trail wears on sanity and the wagon, and the
+    // party starves if the food has run out. Returns the change that actually happened
+    // so it can be shown to the player.
     Effects advanceTime();
 
     bool isAlive() const;

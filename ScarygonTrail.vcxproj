@@ -86,6 +86,8 @@
     <ClCompile Include="src\Effects.cpp" />
     <ClCompile Include="src\Party.cpp" />
     <ClCompile Include="src\Trail.cpp" />
+    <ClCompile Include="src\NarrativeState.cpp" />
+    <ClCompile Include="src\SceneRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Game.h" />
@@ -96,6 +98,8 @@
     <ClInclude Include="src\Party.h" />
     <ClInclude Include="src\TimeOfDay.h" />
     <ClInclude Include="src\Trail.h" />
+    <ClInclude Include="src\NarrativeState.h" />
+    <ClInclude Include="src\SceneRenderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

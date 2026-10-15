@@ -13,15 +13,17 @@ namespace {
     constexpr float       kNarrativeScale = 2.0f;   // 8px font drawn at 16px
     constexpr std::size_t kMaxChoices     = 4;      // matches keys 1-4 and the 2x2 button grid
 
-    // Top panel (HUD) layout
-    constexpr float kHeadingScale = 3.0f;
-    constexpr float kStatScale    = 2.0f;
-    constexpr float kStatBarX     = 140.0f;
-    constexpr float kStatBarWidth = 240.0f;
+    // Top panel layout
+    constexpr float kHeadingScale  = 3.0f;
+    constexpr float kStatScale     = 2.0f;
+    constexpr float kStatBarX      = 140.0f;
+    constexpr float kStatBarWidth  = 240.0f;
     constexpr float kStatBarHeight = 16.0f;
+    constexpr SDL_FRect kSceneArea    { 470.0f, 24.0f, 466.0f, 252.0f };
+    constexpr SDL_FRect kProgressArea {  24.0f, 292.0f, 912.0f,  76.0f };
 }
 
-Game::Game() = default;
+Game::Game() : m_narrator(NarrativeState::create(NarrativeKind::Stable)) {}
 
 Game::~Game() {
     shutdown();
@@ -56,6 +58,10 @@ bool Game::init(const char* title, int width, int height) {
         std::cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << "\n";
         return false;
     }
+
+    // The scene is animated, so the loop redraws constantly. Vsync caps that at the
+    // monitor's refresh rate instead of using a whole CPU core. (Not fatal if unsupported.)
+    SDL_SetRenderVSync(m_renderer, 1);
 
     const bool loaded = m_trail.loadFromFile(kEventFile);
     for (const std::string& warning : m_trail.getWarnings()) {
@@ -120,6 +126,7 @@ void Game::handleInput() {
 
 void Game::update() {
     // Nothing runs on a timer yet: the game advances when the player picks a button.
+    // (The scene animation is driven by the clock inside SceneRenderer.)
 }
 
 // ---------------------------------------------------------------------------
@@ -129,6 +136,8 @@ void Game::update() {
 void Game::startGame() {
     m_party.reset();
     m_trail.reset();
+    setNarrator(NarrativeKind::Stable);
+    m_pendingNotice.clear();
     showCurrentEvent();
 }
 
@@ -147,9 +156,9 @@ void Game::showCurrentEvent() {
     m_phase = Phase::Event;
     std::vector<std::string> labels;
     for (const Choice& choice : event->getChoices()) {
-        labels.push_back(choice.getLabel());
+        labels.push_back(choice.getLabel());  // button labels always tell the truth
     }
-    showScreen(event->getText(), labels);
+    showScreen(event->getText(), labels, true);
 }
 
 void Game::onEventChoice(std::size_t index) {
@@ -160,20 +169,21 @@ void Game::onEventChoice(std::size_t index) {
     const Effects effects = choice.getEffects();
 
     m_party.apply(effects);
-    const Effects upkeep = m_party.advanceTime();  // the party eats (and may starve)
+    const Effects upkeep = m_party.advanceTime();  // the trail's toll: food, sanity, wagon (and starvation)
+    updateNarrator();                              // sanity may have crossed a threshold
 
     std::cout << "Day " << m_trail.currentDay() << ", " << partName(m_trail.currentPart())
               << ": chose [" << (index + 1) << "] " << choice.getLabel()
-              << " (" << effects.describe() << ")\n";
+              << " (" << effects.describe() << ") -> " << m_narrator->name() << "\n";
 
-    std::string text = choice.getResultText() + " (" + effects.describe() + ") "
-                     + "The party eats (" + upkeep.describe() + ").";
+    // The story text may lie; the summary of what actually happened never does.
+    std::string factual = "(" + effects.describe() + ") The trail takes its toll (" + upkeep.describe() + ").";
     if (upkeep.health < 0) {
-        text += " The party is starving.";
+        factual += " The party is starving.";
     }
 
     m_phase = Phase::Result;
-    showScreen(text, { "Continue" });
+    showScreen(choice.getResultText(), { "Continue" }, true, factual);
 }
 
 void Game::onResultContinue() {
@@ -193,10 +203,12 @@ void Game::onResultContinue() {
 
 void Game::showDaySummary() {
     m_phase = Phase::DaySummary;
-    showScreen("Day " + std::to_string(m_trail.currentDay()) + " is over. Food " +
-               std::to_string(m_party.getFood()) + ", Health " + std::to_string(m_party.getHealth()) +
+    // The recap is the moment of truth: real numbers, whatever state your mind is in.
+    showScreen("Day " + std::to_string(m_trail.currentDay()) + " is over. The oxen are still watching.",
+               { "Continue" }, false,
+               "Food " + std::to_string(m_party.getFood()) + ", Health " + std::to_string(m_party.getHealth()) +
                ", Sanity " + std::to_string(m_party.getSanity()) + ", Wagon " +
-               std::to_string(m_party.getWagon()) + ". The oxen are still watching.", { "Continue" });
+               std::to_string(m_party.getWagon()) + ".");
 }
 
 void Game::onDaySummaryContinue() {
@@ -212,6 +224,8 @@ void Game::onDaySummaryContinue() {
 void Game::showEnding(const std::string& text, bool canRestart) {
     m_phase = Phase::Ending;
     m_canRestart = canRestart;
+    setNarrator(NarrativeKind::Stable);  // the ending always tells the truth
+    m_pendingNotice.clear();
     if (canRestart) {
         showScreen(text, { "Play again", "Quit" });
     } else {
@@ -237,13 +251,41 @@ void Game::selectChoice(std::size_t index) {
 }
 
 // ---------------------------------------------------------------------------
+// Narrator (State pattern): sanity decides how much the game can be trusted
+// ---------------------------------------------------------------------------
+
+void Game::setNarrator(NarrativeKind kind) {
+    m_narrator = NarrativeState::create(kind);
+}
+
+void Game::updateNarrator() {
+    const NarrativeKind wanted = NarrativeState::kindForSanity(m_party.getSanity());
+    if (wanted == m_narrator->kind()) return;
+
+    setNarrator(wanted);
+    m_pendingNotice = m_narrator->enterMessage();  // shown once, on the next screen
+    std::cout << "[narrator] now " << m_narrator->name() << " (sanity " << m_party.getSanity() << ")\n";
+}
+
+// ---------------------------------------------------------------------------
 // Bottom panel: text, buttons, mouse
 // ---------------------------------------------------------------------------
 
-void Game::showScreen(const std::string& text, const std::vector<std::string>& buttonLabels) {
-    m_narrative = text;
-    m_buttons.clear();
+void Game::showScreen(const std::string& narrative, const std::vector<std::string>& buttonLabels,
+                      bool lie, const std::string& factual) {
+    ++m_screenSeed;  // new screen = new lies; the same screen always shows the same ones
 
+    std::string shown = lie ? m_narrator->filterText(narrative, m_screenSeed) : narrative;
+    if (!factual.empty()) {
+        shown += " " + factual;
+    }
+    if (!m_pendingNotice.empty()) {
+        shown += " " + m_pendingNotice;
+        m_pendingNotice.clear();
+    }
+    m_narrative = shown;
+
+    m_buttons.clear();
     // Rects are placeholders here; layoutButtons() positions them.
     for (std::size_t i = 0; i < buttonLabels.size() && i < kMaxChoices; ++i) {
         m_buttons.emplace_back(buttonLabels[i], SDL_FRect{ 0.0f, 0.0f, 0.0f, 0.0f });
@@ -300,7 +342,10 @@ void Game::handleMouseClick(float x, float y) {
 // Rendering
 // ---------------------------------------------------------------------------
 
-void Game::drawStatBar(const char* label, int value, float y, SDL_Color fill) {
+void Game::drawStatBar(const char* label, Stat stat, int actualValue, float y, SDL_Color fill) {
+    // What the HUD shows may be a lie, depending on the narrator's state.
+    const int shown = m_narrator->shownValue(actualValue, stat, m_screenSeed);
+
     // Label
     SDL_SetRenderDrawColor(m_renderer, 60, 40, 30, 255);
     m_text.drawLine(m_renderer, label, kPadding, y, kStatScale);
@@ -310,8 +355,8 @@ void Game::drawStatBar(const char* label, int value, float y, SDL_Color fill) {
     SDL_SetRenderDrawColor(m_renderer, 185, 165, 125, 255);
     SDL_RenderFillRect(m_renderer, &track);
 
-    // Filled part, proportional to the stat (0..100)
-    const float fraction = static_cast<float>(std::max(0, std::min(value, Party::kMaxStat))) /
+    // Filled part, proportional to the shown value (0..100)
+    const float fraction = static_cast<float>(std::max(0, std::min(shown, Party::kMaxStat))) /
                            static_cast<float>(Party::kMaxStat);
     SDL_FRect filled{ kStatBarX, y, kStatBarWidth * fraction, kStatBarHeight };
     SDL_SetRenderDrawColor(m_renderer, fill.r, fill.g, fill.b, 255);
@@ -321,7 +366,7 @@ void Game::drawStatBar(const char* label, int value, float y, SDL_Color fill) {
     SDL_SetRenderDrawColor(m_renderer, 90, 70, 50, 255);
     SDL_RenderRect(m_renderer, &track);
     SDL_SetRenderDrawColor(m_renderer, 60, 40, 30, 255);
-    m_text.drawLine(m_renderer, std::to_string(value), kStatBarX + kStatBarWidth + 12.0f, y, kStatScale);
+    m_text.drawLine(m_renderer, m_narrator->valueLabel(shown), kStatBarX + kStatBarWidth + 12.0f, y, kStatScale);
 }
 
 void Game::renderTop() {
@@ -341,12 +386,17 @@ void Game::renderTop() {
     m_text.drawLine(m_renderer, heading, kPadding, kPadding, kHeadingScale);
 
     // The party's four stats
-    drawStatBar("Food",   m_party.getFood(),   84.0f,  SDL_Color{ 205, 150,  55, 255 });
-    drawStatBar("Health", m_party.getHealth(), 120.0f, SDL_Color{ 190,  60,  50, 255 });
-    drawStatBar("Sanity", m_party.getSanity(), 156.0f, SDL_Color{ 115,  90, 170, 255 });
-    drawStatBar("Wagon",  m_party.getWagon(),  192.0f, SDL_Color{ 120,  90,  60, 255 });
+    drawStatBar("Food",   Stat::Food,   m_party.getFood(),   84.0f,  SDL_Color{ 205, 150,  55, 255 });
+    drawStatBar("Health", Stat::Health, m_party.getHealth(), 120.0f, SDL_Color{ 190,  60,  50, 255 });
+    drawStatBar("Sanity", Stat::Sanity, m_party.getSanity(), 156.0f, SDL_Color{ 115,  90, 170, 255 });
+    drawStatBar("Wagon",  Stat::Wagon,  m_party.getWagon(),  192.0f, SDL_Color{ 120,  90,  60, 255 });
 
-    // TODO: wagon sprite, trail dots and party portraits go on the right-hand side.
+    // The wagon and its oxen, under a sky that follows the time of day
+    m_scene.drawScene(m_renderer, kSceneArea, m_trail.currentPart(), SDL_GetTicks(), m_narrator->dread());
+
+    // How far along the trail we are
+    m_scene.drawProgress(m_renderer, m_text, kProgressArea, m_trail.lastDay(),
+                         m_trail.currentDay(), m_trail.currentPart());
 }
 
 void Game::renderBottom() {

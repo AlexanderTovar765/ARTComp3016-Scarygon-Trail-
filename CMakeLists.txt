@@ -39,7 +39,9 @@ add_executable(ScarygonTrail
     src/TextRenderer.cpp
     src/Effects.cpp
     src/Party.cpp
-    src/Trail.cpp)
+    src/Trail.cpp
+    src/NarrativeState.cpp
+    src/SceneRenderer.cpp)
 
 target_include_directories(ScarygonTrail PRIVATE src)
 target_link_libraries(ScarygonTrail PRIVATE SDL3::SDL3)
@@ -64,3 +66,14 @@ if(WIN32)
                 "${SDL3_VENDOR_DIR}/lib/x64/SDL3.dll" "$<TARGET_FILE_DIR:ScarygonTrail>"
         COMMENT "Copying SDL3.dll next to the executable")
 endif()
+
+# ---- Optional: balance simulator (no SDL needed) ---------------------------
+# Not part of the normal build. Build it with:  cmake --build <dir> --target balance_sim
+# Run it from the repo root:                    <dir>/balance_sim data/events.txt 20000
+add_executable(balance_sim EXCLUDE_FROM_ALL
+    tools/balance_sim.cpp
+    src/Trail.cpp
+    src/Party.cpp
+    src/Effects.cpp
+    src/NarrativeState.cpp)
+target_include_directories(balance_sim PRIVATE src)

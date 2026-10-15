@@ -23,8 +23,14 @@ Effects Party::advanceTime() {
     Effects change;
 
     const int foodBefore = m_food;
-    m_food = clampStat(m_food - kFoodPerPart);
-    change.food = m_food - foodBefore;  // the amount actually eaten (0 if there was none left)
+    const int sanityBefore = m_sanity;
+    const int wagonBefore = m_wagon;
+    m_food   = clampStat(m_food   - kFoodPerPart);
+    m_sanity = clampStat(m_sanity - kSanityPerPart);
+    m_wagon  = clampStat(m_wagon  - kWagonPerPart);
+    change.food   = m_food   - foodBefore;    // the amounts that actually changed
+    change.sanity = m_sanity - sanityBefore;
+    change.wagon  = m_wagon  - wagonBefore;
 
     if (m_food == 0) {
         const int healthBefore = m_health;

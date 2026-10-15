@@ -23,6 +23,7 @@ public:
     const Event* getEvent(int day, TimePart part) const;
     const Event* currentEvent() const { return getEvent(m_day, m_part); }
     bool hasDay(int day) const;
+    int lastDay() const;  // highest day that has an event (1 if there are none)
 
     int currentDay() const       { return m_day; }
     TimePart currentPart() const { return m_part; }
