@@ -13,7 +13,7 @@ No image-generation tools were used. All artwork is drawn in code (rectangles, c
 
 | Category | Where it was used | Roughly how much of the final result |
 |---|---|---|
-| Code generation (Limited) | | Debugging | Build errors, merge-conflict markers, git push failures |
+| Code generation (Limited) | | Debugging | | Build errors, merge-conflict markers, git push failures |
 | Documentation | Drafted by AI, written by me |
 | Narration and dialogue | Event text, choice labels, result text, warnings | AI made suggestions, I plotted out and made |
 | Gameplay balancing | Balance simulator and tuning of tolls and thresholds | Partnered, went through multiple variations to determine W/L ratios |
