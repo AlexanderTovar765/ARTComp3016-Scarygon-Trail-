@@ -1,8 +1,10 @@
 #pragma once
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "Conditions.h"
 #include "Effects.h"
 #include "TimeOfDay.h"
 
@@ -24,19 +26,25 @@ private:
 };
 
 // A narrative moment: it belongs to one part of one day and offers up to 4 Choices.
+// An event may be a "desperate variant": it only appears (in place of the normal event
+// for that slot) while its Condition is active, e.g. LowFood.
 class Event {
 public:
-    Event(int day, TimePart part, std::string text, std::vector<Choice> choices)
-        : m_day(day), m_part(part), m_text(std::move(text)), m_choices(std::move(choices)) {}
+    Event(int day, TimePart part, std::string text, std::vector<Choice> choices,
+          std::optional<Condition> condition = std::nullopt)
+        : m_day(day), m_part(part), m_text(std::move(text)), m_choices(std::move(choices)),
+          m_condition(condition) {}
 
     int getDay() const                         { return m_day; }
     TimePart getPart() const                   { return m_part; }
     const std::string& getText() const         { return m_text; }
     const std::vector<Choice>& getChoices() const { return m_choices; }
+    const std::optional<Condition>& getCondition() const { return m_condition; }
 
 private:
     int m_day;
     TimePart m_part;
     std::string m_text;
     std::vector<Choice> m_choices;
+    std::optional<Condition> m_condition;
 };

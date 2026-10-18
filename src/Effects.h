@@ -9,6 +9,10 @@ struct Effects {
     int sanity = 0;
     int wagon  = 0;
 
+    // Who the health change hits: empty = every living member, or one member's name
+    // (canonical, e.g. "Pa"). Food, sanity and wagon are always shared.
+    std::string member;
+
     bool isZero() const { return food == 0 && health == 0 && sanity == 0 && wagon == 0; }
 
     // Readable summary such as "Food -5, Sanity +3" (or "no change").

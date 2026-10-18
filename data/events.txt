@@ -4,6 +4,9 @@
 #   [EVENT]   starts an event.   Keys: day, part, text
 #   [CHOICE]  starts a choice for the event above (1 to 4 per event).
 #             Keys: label, result, food, health, sanity, wagon
+#             member = Ma|Pa|Junior|Granny  (optional: health damage/healing hits only that person)
+#   Event key  requires = LowFood|LowWagon|LowHealth  makes the event a DESPERATE VARIANT that
+#             replaces the normal event for its slot while that condition is true.
 #   part is one of: Dawn, Mid-Morning, Noon, Evening, Night
 #   Effects are whole numbers: positive helps the party, negative hurts it.
 #   Leave an effect out and it is 0. Stats run from 0 to 100.
@@ -105,8 +108,9 @@ sanity = 5
 
 [CHOICE]
 label = Challenge the deer to a duel
+member = Pa
 result = The deer wins. It politely does not finish the job and takes your hat as a trophy.
-health = -12
+health = -20
 sanity = -4
 
 # ----------------------------------------------------------------------
@@ -118,8 +122,10 @@ text = Your son has skipped three meals and has taken up Satanism in an attempt 
 
 [CHOICE]
 label = Feed him a proper meal
+member = Junior
 result = He eats everything and quietly renounces Satan. The circle remains, but it looks tired.
 food = -10
+health = 6
 sanity = 8
 
 [CHOICE]
@@ -130,8 +136,9 @@ sanity = 4
 
 [CHOICE]
 label = Pretend you did not see it
+member = Ma
 result = The curse takes effect. Your boots are now slightly too small, permanently.
-health = -8
+health = -14
 sanity = -4
 
 [CHOICE]
@@ -157,8 +164,9 @@ sanity = 4
 
 [CHOICE]
 label = Throw a boot at it
+member = Pa
 result = You hit it. It collapses into a pile of what you hope are leaves, and you pull a muscle.
-health = -5
+health = -10
 sanity = -6
 
 [CHOICE]
@@ -170,8 +178,9 @@ wagon = -8
 
 [CHOICE]
 label = Stay perfectly still until it leaves
+member = Pa
 result = It leaves around dawn. You spent the whole night not blinking, which your eyes will bring up later.
-health = -6
+health = -10
 sanity = -2
 
 # ======================================================================
@@ -351,8 +360,9 @@ wagon = 12
 
 [CHOICE]
 label = Stay on the old trail
-result = The old trail is rocky and unmoved by your loyalty. The new road watches you go.
-health = -4
+member = Granny
+result = The old trail is rocky and unmoved by your loyalty. The new road watches you go. Granny feels every rock.
+health = -12
 sanity = 4
 wagon = -8
 
@@ -430,8 +440,9 @@ wagon = 6
 
 [CHOICE]
 label = Challenge the hat deer to a rematch
+member = Pa
 result = It wins again. You now have a rivalry, which is somehow better than having nothing.
-health = -10
+health = -18
 sanity = 6
 
 # ----------------------------------------------------------------------
@@ -499,3 +510,174 @@ label = Stare back until dawn
 result = At first light they are gone and you have won, on a technicality. Your eyes disagree.
 health = -10
 sanity = -4
+
+# ======================================================================
+# DESPERATE VARIANTS
+# These replace the normal event for their slot while the condition is true.
+# requires = LowFood | LowWagon | LowHealth  (thresholds are in src/ThresholdWatcher.h)
+# ======================================================================
+
+[EVENT]
+day = 2
+part = Noon
+requires = LowFood
+text = A camp ahead is cooking something that smells wonderful. Your stomach has started negotiating on your behalf, and it is not a patient negotiator.
+
+[CHOICE]
+label = Beg for a bowl
+result = They hand you a bowl and watch you eat every spoonful. Nobody asks for payment, which is somehow worse.
+food = 18
+sanity = -6
+
+[CHOICE]
+label = Steal the whole pot
+result = You run. The pot is heavy, hot, and apparently theirs. Nobody chases you. They just keep smiling at the same speed.
+food = 25
+health = -5
+sanity = -10
+
+[CHOICE]
+label = Offer to work for a meal
+result = You chop wood for two hours. The stew is excellent. You owe them something, but nobody mentions what.
+food = 14
+health = -4
+sanity = -3
+
+[CHOICE]
+label = Trade the spare wheel for food
+result = A fair deal, if you ignore the wheel. You will think about the wheel later.
+food = 20
+wagon = -10
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 3
+part = Noon
+requires = LowFood
+text = The deer from Day 1 is back, and you are very hungry. It seems to know this, and is standing perfectly still.
+
+[CHOICE]
+label = Shoot the deer, quickly
+result = The deer sighs and it is over. You eat well, in silence. One of the others keeps your hat.
+food = 25
+sanity = -8
+
+[CHOICE]
+label = Ask the deer for help
+result = It leads you to a field of wild berries and leaves without a word, the most helpful thing a deer has ever done.
+food = 15
+sanity = 4
+
+[CHOICE]
+label = Eat the oats meant for the oxen
+result = The oxen watch you do it. Their silence is a statement, and the statement is a long one.
+food = 12
+sanity = -4
+wagon = -8
+
+[CHOICE]
+label = Share what little you have
+result = The herd takes the crumbs gravely and gives you a long look and a few coins. Trade is possible, but not today.
+food = -4
+sanity = 10
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 2
+part = Mid-Morning
+requires = LowWagon
+text = A river crossing, and the wagon creaks like a bad idea. One sign says SHALLOW. The wagon has opinions about that.
+
+[CHOICE]
+label = Ford it anyway
+result = The wheels hold, then they do not. The oxen drag the wagon out of the river with the air of a profession.
+sanity = 3
+wagon = -20
+
+[CHOICE]
+label = Repair it before crossing
+result = It takes the afternoon. The wagon accepts the repairs the way a cat accepts a bath.
+food = -6
+health = -3
+wagon = 18
+
+[CHOICE]
+label = Leave half the cargo behind
+result = The wagon floats, nearly. You never see the cargo again, but you begin to suspect it saw you.
+food = -10
+sanity = -4
+wagon = 10
+
+[CHOICE]
+label = Carry everyone across by hand
+result = It takes six trips and a lot of language. The wagon crosses empty and arrives looking smug.
+health = -6
+sanity = 5
+wagon = 4
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 3
+part = Dawn
+requires = LowWagon
+text = The new road is back. It is smooth, wide, and clearly meant for you. Your wagon looks at it the way a starving man looks at a pie.
+
+[CHOICE]
+label = Take the new road
+result = The wagon purrs. It has never run so smoothly, which is exactly what worries you.
+sanity = -10
+wagon = 20
+
+[CHOICE]
+label = Patch the wagon on the old trail
+result = You find a bent nail and a firm opinion. The wagon holds, mostly.
+food = -4
+wagon = 10
+
+[CHOICE]
+label = Ask the oxen
+result = They go left, then stop, then look at the road. Even the oxen are tempted.
+sanity = -5
+wagon = 8
+
+[CHOICE]
+label = Burn the old trail markers
+result = A dramatic gesture that fixes nothing and warms everyone's hands.
+sanity = 6
+wagon = -4
+
+# ----------------------------------------------------------------------
+
+[EVENT]
+day = 3
+part = Evening
+requires = LowHealth
+text = Your son has drawn a third circle. This one is a bed. He says the whole family looks terrible and should lie down in it.
+
+[CHOICE]
+label = Lie down in the circle
+result = It is warm, and it hums. By morning everyone feels a little better and slightly more owned.
+health = 14
+sanity = -9
+
+[CHOICE]
+label = Make soup in the circle
+result = The circle accepts the soup. The soup accepts nothing, but it is hot.
+food = -8
+health = 10
+sanity = 3
+
+[CHOICE]
+label = Forbid it
+result = He sighs like a much older man. Nobody sleeps well, and everyone is vaguely ashamed.
+health = -4
+sanity = 4
+
+[CHOICE]
+label = Ask where he learned this
+result = From the oxen, he says. They do not deny it.
+health = 6
+sanity = -8

@@ -1,8 +1,11 @@
 #include "Trail.h"
 
+#include "PartyMember.h"
+
 #include <cctype>
 #include <cstdlib>
 #include <fstream>
+#include <optional>
 
 namespace {
     // Soft limits so text fits the panel and buttons. Going over only produces a warning
@@ -72,6 +75,7 @@ namespace {
 
 bool Trail::loadFromFile(const std::string& path) {
     m_events.clear();
+    m_eventCount = 0;
     m_warnings.clear();
     reset();
 
@@ -89,6 +93,7 @@ bool Trail::loadFromFile(const std::string& path) {
     int day = 0;
     bool partSet = false;
     TimePart part = TimePart::Dawn;
+    std::optional<Condition> eventCondition;
     std::string text;
     std::vector<Choice> choices;
     int choiceLine = 0;
@@ -134,10 +139,22 @@ bool Trail::loadFromFile(const std::string& path) {
 
         if (eventOk) {
             const std::pair<int, int> key(day, static_cast<int>(part));
-            if (m_events.count(key) != 0) {
-                warn(eventLine, "duplicate event for that day and part; keeping the first one");
+            std::vector<Event>& slot = m_events[key];
+
+            bool duplicate = false;
+            for (const Event& existing : slot) {
+                const std::optional<Condition>& other = existing.getCondition();
+                if (other.has_value() == eventCondition.has_value() &&
+                    (!other.has_value() || *other == *eventCondition)) {
+                    duplicate = true;
+                }
+            }
+            if (duplicate) {
+                warn(eventLine, "duplicate event for that day, part and condition; keeping the first one");
+                if (slot.empty()) m_events.erase(key);
             } else {
-                m_events.emplace(key, Event(day, part, text, choices));
+                slot.emplace_back(day, part, text, choices, eventCondition);
+                ++m_eventCount;
             }
         }
     };
@@ -148,6 +165,7 @@ bool Trail::loadFromFile(const std::string& path) {
         eventLine = line;
         day = 0;
         partSet = false;
+        eventCondition.reset();
         text.clear();
         choices.clear();
     };
@@ -202,6 +220,14 @@ bool Trail::loadFromFile(const std::string& path) {
                 label = value;
             } else if (key == "result") {
                 result = value;
+            } else if (key == "member") {
+                const int index = findMemberIndex(value);
+                if (index >= 0) {
+                    effects.member = memberTemplates()[index].name;
+                } else {
+                    warn(lineNumber, "unknown member '" + value + "' (use Ma, Pa, Junior or Granny); the whole event is skipped");
+                    eventOk = false;
+                }
             } else if (target) {
                 int number = 0;
                 if (parseInt(value, number)) {
@@ -231,6 +257,14 @@ bool Trail::loadFromFile(const std::string& path) {
                 }
             } else if (key == "text") {
                 text = value;
+            } else if (key == "requires") {
+                Condition condition;
+                if (parseCondition(value, condition)) {
+                    eventCondition = condition;
+                } else {
+                    warn(lineNumber, "unknown condition '" + value + "' (use LowFood, LowWagon or LowHealth); the whole event is skipped");
+                    eventOk = false;
+                }
             } else {
                 warn(lineNumber, "unknown event key '" + key + "'; ignored");
             }
@@ -238,16 +272,39 @@ bool Trail::loadFromFile(const std::string& path) {
     }
     finishEvent();
 
-    if (m_events.empty()) {
+    // A slot that only has desperate variants would be empty most of the time.
+    for (const auto& entry : m_events) {
+        bool hasDefault = false;
+        for (const Event& event : entry.second) {
+            if (!event.getCondition().has_value()) hasDefault = true;
+        }
+        if (!hasDefault) {
+            m_warnings.push_back(path + ": Day " + std::to_string(entry.first.first) + ", " +
+                                 partName(static_cast<TimePart>(entry.first.second)) +
+                                 " has only conditional variants and no normal event");
+        }
+    }
+
+    if (m_eventCount == 0) {
         m_warnings.push_back(path + ": no valid events were found");
         return false;
     }
     return true;
 }
 
-const Event* Trail::getEvent(int day, TimePart part) const {
+const Event* Trail::getEvent(int day, TimePart part, ConditionSet active) const {
     const auto it = m_events.find(std::make_pair(day, static_cast<int>(part)));
-    return it == m_events.end() ? nullptr : &it->second;
+    if (it == m_events.end()) return nullptr;
+
+    const Event* normal = nullptr;
+    for (const Event& event : it->second) {
+        if (!event.getCondition().has_value()) {
+            if (!normal) normal = &event;
+        } else if (active.has(*event.getCondition())) {
+            return &event;  // an active desperate variant replaces the normal event
+        }
+    }
+    return normal;
 }
 
 bool Trail::hasDay(int day) const {
