@@ -27,7 +27,7 @@ No image-generation tools were used. All artwork is drawn in code (rectangles, c
 | Tone | "Comedic horror is the tone I am focusing on with this project." | A deadpan style for event text |
 | Layout | "The top screen would have the 2D graphics showing inventory or characters or wagon, and the bottom would have the text and options for button pressing." | The split-panel skeleton |
 | Scope | "I have 6 weeks to make the game, so this is how I'm scaling it. The game will consist of 3 days total with 5 parts of the day: dawn, mid day, noon, evening, night. One event per part." | Day/part system and the event file format |
-| Review | "Is there any part the could be included or improved to create a more user friendly game?" |
+| Review | "Is there any part the could be included or improved to create a more user friendly game?" ||Including sound effects, opening page and instructions would greatly improve the users enjoyment of The Scarygon Trail|
 
 
 
