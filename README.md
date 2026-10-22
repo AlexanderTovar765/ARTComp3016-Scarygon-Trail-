@@ -80,15 +80,15 @@ PLACEHOLDER: add a paragraph in your own words about what a run feels like and w
 
 | Title | How to play |
 |---|---|
-| ![Title screen](<img width="956" height="636" alt="Title Screen" src="https://github.com/user-attachments/assets/1c51d90e-9d1a-4da6-93ba-17830b771643" />) | ![Instructions screen](<img width="958" height="636" alt="How To Play" src="https://github.com/user-attachments/assets/9781f0b9-881b-47d9-96d5-f134f952fc66" />) |
+| (<img width="956" height="636" alt="Title Screen" src="https://github.com/user-attachments/assets/1c51d90e-9d1a-4da6-93ba-17830b771643" />) |(<img width="958" height="636" alt="How To Play" src="https://github.com/user-attachments/assets/9781f0b9-881b-47d9-96d5-f134f952fc66" />) |
 
 | An event | A result with a warning |
 |---|---|
-| ![An event](<img width="954" height="636" alt="Event Screen" src="https://github.com/user-attachments/assets/b2d03f1b-da09-4712-8f17-e6e6e9ec2b56" />) | ![A result with a warning](<img width="957" height="640" alt="Result Screen" src="https://github.com/user-attachments/assets/e370339f-ea8d-4d8b-8a49-aadd1690265e" />) |
+| (<img width="954" height="636" alt="Event Screen" src="https://github.com/user-attachments/assets/b2d03f1b-da09-4712-8f17-e6e6e9ec2b56" />) |(<img width="957" height="640" alt="Result Screen" src="https://github.com/user-attachments/assets/e370339f-ea8d-4d8b-8a49-aadd1690265e" />) |
 
 | Ending summary |
 |---|
-| ![Ending summary](<img width="958" height="637" alt="Ending Screen" src="https://github.com/user-attachments/assets/18f0df4b-318c-4da0-8b6d-000cba7b6361" />) |
+| (<img width="958" height="637" alt="Ending Screen" src="https://github.com/user-attachments/assets/18f0df4b-318c-4da0-8b6d-000cba7b6361" />) |
 
 
 ## 5. Dependencies
@@ -135,7 +135,7 @@ The game’s central joke is that the narrator gets less trustworthy as sanity d
 | Playtest log | Optional anonymous CSV of the choices made | `PlaytestLog`, `Settings` |
 
 ## 10. UML design diagram
-
+New Design:
 ```mermaid
 classDiagram
     class Game { +init() +run() }
