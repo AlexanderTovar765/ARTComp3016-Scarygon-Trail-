@@ -10,7 +10,7 @@ namespace {
         out += std::to_string(value);
     }
 }
-
+// This part of the code is for the effect meters to register.
 std::string Effects::describe() const {
     std::string out;
     append(out, "Food", food);
