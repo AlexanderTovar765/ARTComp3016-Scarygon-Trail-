@@ -49,7 +49,7 @@ then rebuild with **Build > Rebuild Solution**. The project detects `vendored/ir
 
 ## 2. Proposal and deviations
 
-Week 2 proposal: PLACEHOLDER: add a link to the proposal PDF (for example `docs/proposal.pdf`) or paste it here.
+Week 2 proposal: https://docs.google.com/document/d/1e3urBafL8XUcumxg3YoX4mpzwOVRAyJINFEv5XdRE8o/edit?tab=t.0#heading=h.hbigc4tx4p9x
 
 ### Deviations from the proposal
 
@@ -80,17 +80,21 @@ PLACEHOLDER: add a paragraph in your own words about what a run feels like and w
 
 | Title | How to play |
 |---|---|
-| ![Title screen](docs/screenshots/title.png) | ![Instructions screen](docs/screenshots/instructions.png) |
+| ![Title screen](<img width="956" height="636" alt="Title Screen" src="https://github.com/user-attachments/assets/1c51d90e-9d1a-4da6-93ba-17830b771643" />
+) | ![Instructions screen](<img width="958" height="636" alt="How To Play" src="https://github.com/user-attachments/assets/9781f0b9-881b-47d9-96d5-f134f952fc66" />
+) |
 
 | An event | A result with a warning |
 |---|---|
-| ![An event](docs/screenshots/event.png) | ![A result with a warning](docs/screenshots/result-with-warning.png) |
+| ![An event](<img width="954" height="636" alt="Event Screen" src="https://github.com/user-attachments/assets/b2d03f1b-da09-4712-8f17-e6e6e9ec2b56" />
+) | ![A result with a warning](<img width="957" height="640" alt="Result Screen" src="https://github.com/user-attachments/assets/e370339f-ea8d-4d8b-8a49-aadd1690265e" />
+) |
 
 | Ending summary |
 |---|
-| ![Ending summary](docs/screenshots/ending.png) |
+| ![Ending summary](<img width="958" height="637" alt="Ending Screen" src="https://github.com/user-attachments/assets/18f0df4b-318c-4da0-8b6d-000cba7b6361" />
+) |
 
-PLACEHOLDER: add screenshots from your Release build, for example a Breakdown-state screen and a dead family member's portrait.
 
 ## 5. Dependencies
 
@@ -98,7 +102,7 @@ PLACEHOLDER: add screenshots from your Release build, for example a Breakdown-st
 - **irrKlang 1.6.0** (optional, downloaded by `tools/get-irrklang.ps1`): sound.
 - Nothing else beyond the standard C++17 library.
 
-## 6. Use of AI
+## 6. Use of AI-COME BACK TO
 
 PLACEHOLDER: two or three paragraphs in your own words: which tool you used, what for, what you reviewed and changed, and what you decided yourself.
 
@@ -108,7 +112,7 @@ The full account is in the AI Development Log (section 7). The signed Generative
 
 See [docs/ai-dev-log.md](docs/ai-dev-log.md) for the AI tools used, categories of use, example prompts, the verification process, and repository evidence.
 
-## 8. Game programming patterns
+## 8. Game programming patterns-ASK CLAUDE FOR PLACEHOLDER
 
 | Pattern | Where | Why |
 |---|---|---|
