@@ -42,7 +42,7 @@ Written while watching, without helping.
 
 ## Questionnaire results
 
-Rated 1 (strongly disagree) to 5 (strongly agree). The blank form is `docs/playtest/questionnaire.md`.
+Rated 1 (strongly disagree) to 5 (strongly agree). 
 
 | Question | A | B | C | D | E |
 |---|---|---|---|---|---|
