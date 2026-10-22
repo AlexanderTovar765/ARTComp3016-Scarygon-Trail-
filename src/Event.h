@@ -8,8 +8,8 @@
 #include "Effects.h"
 #include "TimeOfDay.h"
 
-// One option the player can pick: the button label, what happens, and how it
-// changes the party's stats.
+// This part of the code makes one option the player can pick: the button label, what happens, and how it will
+// change the party's stats.
 class Choice {
 public:
     Choice(std::string label, std::string resultText, Effects effects)
@@ -25,9 +25,9 @@ private:
     Effects     m_effects;
 };
 
-// A narrative moment: it belongs to one part of one day and offers up to 4 Choices.
-// An event may be a "desperate variant": it only appears (in place of the normal event
-// for that slot) while its Condition is active, e.g. LowFood.
+// This part of the code is for the narrative moments: it belongs to one portion of one day and gives up to 4 Choices.
+// An event may be a "desperate variant": it will only appear (in place of the normal event
+// for that slot) while its condition is active, like if LowFood happens too early.
 class Event {
 public:
     Event(int day, TimePart part, std::string text, std::vector<Choice> choices,
