@@ -1,58 +1,86 @@
 # Playtesting
 
-Evidence for the brief's playtesting requirements: who tested, what was tested, feedback, changes made, and what is still wrong. Fill this in as sessions happen and commit it after each one, so the history shows feedback leading to changes. Anonymise testers (Tester A, B, C...).
+Evidence for the brief's playtesting requirements: who tested, what was tested, the feedback received, the changes made and what is still wrong. Testers are anonymised (Tester A, B, C...). Each round is committed after the session, so the history shows feedback leading to changes.
+
+## Plan
+
+| Round | Who | Build | Aim | Dates |
+|---|---|---|---|---|
+| 1 | 3-5 testers (classmates, friends, family) | PLACEHOLDER: commit hash | Find confusing text, unfair moments and bugs in the current game | PLACEHOLDER |
+| 2 | 2-3 testers, including at least one from round 1 | PLACEHOLDER: commit hash | Check the round 1 fixes worked and nothing new broke | PLACEHOLDER |
+
+How a session runs: about 15-20 minutes. The tester plays without help while I fill in the observation sheet, then they fill in the questionnaire alone, then I ask what the best moment was and what they would change first. The forms are in `docs/playtest/`.
+
+## Automated and developer testing (not human playtesting)
+
+These are real results, but they test the rules and the code, not how people react to the game.
+
+| What | How | Result |
+|---|---|---|
+| Difficulty and balance | `tools/balance_sim.cpp` plays 20,000 games per strategy (Random, Greedy, Cautious, Reckless) | Random play survives 67.1% of runs and loses 0.19 family members on average. Greedy and Cautious survive 100%. Reckless survives 0%. See [balance-report.md](balance-report.md) |
+| Rules and loaders | `tests/logic_tests.cpp`, 25 test groups | 14,202 checks, all passing. See [test-cases.md](test-cases.md) |
+| Layout and flow | Scripted headless playthroughs to every ending, with screenshots | Pass |
+| My own play testing | PLACEHOLDER: dates, what you found and fixed | PLACEHOLDER |
 
 ## Session log
 
-| Tester | Date | Who (e.g. classmate, friend) | Build (commit) | How long | Got to |
+| Tester | Date | Who (e.g. classmate, friend) | Build (commit) | Time played | Got to |
 |---|---|---|---|---|---|
-| A | | | | | |
+| A | PLACEHOLDER | PLACEHOLDER | PLACEHOLDER | PLACEHOLDER | PLACEHOLDER |
 | B | | | | | |
 | C | | | | | |
+| D | | | | | |
+| E | | | | | |
 
 ## Observation notes
 
-Watch them play without helping. Write down where they hesitate, laugh, re-read, or get confused.
+Written while watching, without helping.
 
-| Tester | Moment (Day / part) | What I saw | Quote or reaction |
+| Tester | Moment (Day / part) | What I saw | Quote or reaction | Issue # |
+|---|---|---|---|---|
+| PLACEHOLDER | | | | |
+
+## Questionnaire results
+
+Rated 1 (strongly disagree) to 5 (strongly agree). The blank form is `docs/playtest/questionnaire.md`.
+
+| Question | A | B | C | D | E |
+|---|---|---|---|---|---|
+| It was fun | | | | | |
+| The jokes made me laugh | | | | | |
+| I understood what to do without help | | | | | |
+| It was clear what each choice would do | | | | | |
+| The text was easy to read | | | | | |
+| The pictures and portraits helped | | | | | |
+| The sound fitted the game | | | | | |
+| I noticed when the game started lying to me | | | | | |
+| The lying was funny or interesting | | | | | |
+| My choices felt like they mattered | | | | | |
+| I would play it again | | | | | |
+| Difficulty (too easy / about right / too hard) | | | | | |
+
+Open-answer themes: PLACEHOLDER: the best moments, the most confusing moments and what testers would change first.
+
+## Feedback to change
+
+Each piece of feedback becomes a GitHub Issue and is closed by a commit.
+
+| Feedback (tester) | Issue | Change made | Commit |
 |---|---|---|---|
-| | | | |
+| PLACEHOLDER | | | |
 
-## Questionnaire (after playing)
+## Playtesting reflection
 
-Rate 1 (low) to 5 (high).
+- **Who participated:** PLACEHOLDER: number of testers, who they were (anonymised) and when.
+- **What was tested:** PLACEHOLDER
+- **Feedback received:** PLACEHOLDER
+- **Changes implemented:** PLACEHOLDER
+- **Remaining limitations:** PLACEHOLDER
 
-| Question | A | B | C |
-|---|---|---|---|
-| It was fun | | | |
-| The jokes landed | | | |
-| It was clear what each choice would do | | | |
-| It was too easy / too hard (1 = too easy, 5 = too hard) | | | |
-| Choices felt like they mattered | | | |
-| The numbers and text lying to me was noticeable | | | |
-| The numbers and text lying to me was fun (not just annoying) | | | |
+## Optional anonymous playtest log
 
-Open questions:
-1. Favourite event or moment?
-2. Anything confusing or unfair?
-3. Did you notice when the game started lying? How did it feel?
-4. Any bugs or things that looked wrong?
+The game can write a small CSV of the choices a playtester made. It is off unless enabled: set `playtest_log = on` in `data/settings.txt` (or press `L` on the title screen). Each session then writes `playtest_logs/session_<random id>.csv`. Tell testers it is on before they play.
 
-## Issues found and what I did about them
-
-| Issue | Found by | Fix | Commit |
-|---|---|---|---|
-| | | | |
-
-## Reflection (summarise for the report)
-
-- **Who participated:**
-- **What was tested:**
-- **Feedback received:**
-- **Changes I implemented as a result:**
-- **Remaining limitations:**
-
-## Things worth asking testers about (from the design)
-
-- The sanity thresholds are 60 (Unreliable) and 30 (Breakdown), set in `src/NarrativeState.h`. Do testers notice the change, and does it feel fair?
-- Balance numbers are in `src/Party.h` (the per-part toll) and `data/events.txt`. See `docs/balance-report.md` for the simulated difficulty, and compare it with how real testers do.
+- It records: seconds since start, which event and variant, which choice number and label, the four stats after the choice, the narrator state, and START / END / QUIT rows with the result.
+- It does not record: names, accounts, device details or typed text. The file name is a random id, and the only date is the UTC day in the header.
+- Use it to compare what testers did with what they said in the questionnaire, for example which desperate events they met and how often each ending was reached. Copy interesting rows into the observation notes, and delete the file if the tester asks.
