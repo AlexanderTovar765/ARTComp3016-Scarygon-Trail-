@@ -6,8 +6,8 @@ Evidence for the brief's playtesting requirements: who tested, what was tested, 
 
 | Round | Who | Build | Aim | Dates |
 |---|---|---|---|---|
-| 1 | 3-5 testers (classmates, friends, family) | PLACEHOLDER: commit hash | Find confusing text, unfair moments and bugs in the current game | PLACEHOLDER |
-| 2 | 2-3 testers, including at least one from round 1 | PLACEHOLDER: commit hash | Check the round 1 fixes worked and nothing new broke | PLACEHOLDER |
+| 1 | 2 testers (classmates, friends,) | PLACEHOLDER: commit hash | Find confusing text, unfair moments and bugs in the current game | Oct 23-24 |
+| 2 | 3 testers, including at least one from round 1 | PLACEHOLDER: commit hash | Check the round 1 fixes worked and nothing new broke | Oct 30- Nov 2 |
 
 How a session runs: about 15-20 minutes. The tester plays without help while I fill in the observation sheet, then they fill in the questionnaire alone, then I ask what the best moment was and what they would change first. The forms are in `docs/playtest/`.
 
@@ -24,7 +24,7 @@ These are real results, but they test the rules and the code, not how people rea
 
 ## Session log
 
-| Tester | Date | Who (e.g. classmate, friend) | Build (commit) | Time played | Got to |
+| Tester | Date | Who | Build (commit) | Time played | Got to |
 |---|---|---|---|---|---|
 | A | PLACEHOLDER | PLACEHOLDER | PLACEHOLDER | PLACEHOLDER | PLACEHOLDER |
 | B | | | | | |
