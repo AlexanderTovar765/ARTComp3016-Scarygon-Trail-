@@ -118,7 +118,7 @@ See [docs/ai-dev-log.md](docs/ai-dev-log.md) for the AI tools used, categories o
 | Data-driven content | `Trail::loadFromFile` reads `data/events.txt` | Events can be written and edited without recompiling |
 | Pimpl idiom | `AudioManager::Impl` | Keeps irrKlang out of the header. The same class is a silent stand-in when irrKlang is not built in |
 
-PLACEHOLDER: add a sentence or two in your own words about why State and Observer suit this game.
+The game’s central joke is that the narrator gets less trustworthy as sanity drops. The State pattern lets Game swap one narrator object (Stable, Unreliable or Breakdown) without any if chains, and it keeps the lying confined to the presentation, so the rules stay fair. The Observer pattern suits a game where the family’s condition keeps changing, because Party can announce a low-food warning or a death without knowing who is listening, so new reactions can be added without touching the party’s rules.
 
 ## 9. Game mechanics and how they are coded
 
@@ -180,7 +180,8 @@ classDiagram
     NarrativeState <|-- BreakdownNarration
 ```
 
-PLACEHOLDER: add your original hand-drawn UML sketch from the proposal to show how the design evolved.
+Old Design: <img width="446" height="587" alt="Screenshot 2026-10-22 093603" src="https://github.com/user-attachments/assets/8f8d3295-d754-4473-a2c7-cbcd432fc2f6" />
+  
 
 ## 11. Exception handling and test cases
 
@@ -201,11 +202,11 @@ cmake --build build --target logic_tests
 ctest --test-dir build --output-on-failure
 ```
 
-## 12. Playtesting evidence and reflection
+## 12. Playtesting evidence and reflection-COME BACK TO
 
 Evidence (session log, observation notes, questionnaire results) is in [docs/playtesting.md](docs/playtesting.md). PLACEHOLDER: link the playtest folder (for example `docs/playtest/`) once it is in the repository, and link the GitHub Issues that came from tester feedback.
 
-### Playtesting reflection
+### Playtesting reflection-COME BACK TO
 
 - **Who participated:** PLACEHOLDER: number of testers, who they were (anonymised) and when.
 - **What was tested:** PLACEHOLDER
@@ -230,6 +231,6 @@ docs/     AI Development Log, balance report, test cases, playtesting
 - **Anonymous playtest log:** off by default. It can be turned on in `data/settings.txt` or with `L` on the title screen. It records the choices made and the result, with no names or personal data.
 - **Git evidence:** PLACEHOLDER: add a screenshot of your GitHub Insights contribution graph and of key milestone commits.
 
-## 14. Evaluation
+## 14. Evaluation-COME BACK TO
 
 PLACEHOLDER: a brief evaluation in your own words: what you achieved, what you would do differently knowing what you know now, and what you are proudest of. Points to consider: what playtesting taught you, how heavy AI use changed your role, and what you would add with more time.
