@@ -26,8 +26,8 @@ These are real results, but they test the rules and the code, not how people rea
 
 | Tester | Date | Who | Build (commit) | Time played | Got to |
 |---|---|---|---|---|---|
-| A | PLACEHOLDER | PLACEHOLDER | PLACEHOLDER | PLACEHOLDER | PLACEHOLDER |
-| B | | | | | |
+| A | 23/10/26 | User 1 (friend) | PLACEHOLDER | 3min 44sec | Day 3 End |
+| B | 23/10/26 | User 2 (friend) | | 2min 15sec | Day 3 End |
 | C | | | | | |
 | D | | | | | |
 | E | | | | | |
