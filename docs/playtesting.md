@@ -34,7 +34,7 @@ These are real results, but they test the rules and the code, not how people rea
 
 ## Observation notes
 
-Written while watching, without helping.
+Written while watching.
 
 | Tester | Moment (Day / part) | What I saw | Quote or reaction | Issue # |
 |---|---|---|---|---|
@@ -46,41 +46,31 @@ Rated 1 (strongly disagree) to 5 (strongly agree).
 
 | Question | A | B | C | D | E |
 |---|---|---|---|---|---|
-| It was fun | | | | | |
-| The jokes made me laugh | | | | | |
-| I understood what to do without help | | | | | |
-| It was clear what each choice would do | | | | | |
-| The text was easy to read | | | | | |
-| The pictures and portraits helped | | | | | |
-| The sound fitted the game | | | | | |
-| I noticed when the game started lying to me | | | | | |
-| The lying was funny or interesting | | | | | |
-| My choices felt like they mattered | | | | | |
-| I would play it again | | | | | |
-| Difficulty (too easy / about right / too hard) | | | | | |
+| It was fun | 4 | 3 | | | |
+| The jokes made me laugh | 3 | 3 | | | |
+| I understood what to do without help | 5 | 5 | | | |
+| It was clear what each choice would do | 4 | 4 | | | |
+| The text was easy to read | 5 | 5 | | | |
+| The pictures and portraits helped | 4 | 3 | | | |
+| The sound fitted the game | 4 | 4 | | | |
+| I noticed when the game started lying to me | 2 | 2 | | | |
+| The lying was funny or interesting | 3 | 3 | | | |
+| My choices felt like they mattered | 4 | 3 | | | |
+| I would play it again | 4 | 3 | | | |
+| Difficulty (too easy 1-2 / about right 3 / too hard 4-5) | 1 | 1 | | | |
 
-Open-answer themes: PLACEHOLDER: the best moments, the most confusing moments and what testers would change first.
 
 ## Feedback to change
 
-Each piece of feedback becomes a GitHub Issue and is closed by a commit.
-
 | Feedback (tester) | Issue | Change made | Commit |
 |---|---|---|---|
-| PLACEHOLDER | | | |
+| First round of users overall enjoyed the game and were able to finish it. | The game lying to the players was not picked up on | Make the lying text more apparant either with sarcastic phrases or something more blatant | Committed October 24th |
 
 ## Playtesting reflection
 
-- **Who participated:** PLACEHOLDER: number of testers, who they were (anonymised) and when.
-- **What was tested:** PLACEHOLDER
-- **Feedback received:** PLACEHOLDER
-- **Changes implemented:** PLACEHOLDER
+- **Who participated:** 5 Playtesters over 2 weeks, 5 friends and 1 from class.
+- **What was tested:** One full playthrough of the game at their own pace, no help
+- **Feedback received:** All my testers liked the game and the quirky style, with biggest complaints coming from lying text not being more exemplified and PLACEHOLDER.
+- **Changes implemented:** The lying text was PLACEHOLDER.
 - **Remaining limitations:** PLACEHOLDER
 
-## Optional anonymous playtest log
-
-The game can write a small CSV of the choices a playtester made. It is off unless enabled: set `playtest_log = on` in `data/settings.txt` (or press `L` on the title screen). Each session then writes `playtest_logs/session_<random id>.csv`. Tell testers it is on before they play.
-
-- It records: seconds since start, which event and variant, which choice number and label, the four stats after the choice, the narrator state, and START / END / QUIT rows with the result.
-- It does not record: names, accounts, device details or typed text. The file name is a random id, and the only date is the UTC day in the header.
-- Use it to compare what testers did with what they said in the questionnaire, for example which desperate events they met and how often each ending was reached. Copy interesting rows into the observation notes, and delete the file if the tester asks.
