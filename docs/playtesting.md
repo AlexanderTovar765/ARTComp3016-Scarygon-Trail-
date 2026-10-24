@@ -36,9 +36,9 @@ These are real results, but they test the rules and the code, not how people rea
 
 Written while watching.
 
-| Tester | Moment (Day / part) | What I saw | Quote or reaction | 
+| Tester | Moment (Day / part) | What I saw | Quote or reaction | |
 |---|---|---|---|---|
-| Myself | Day 2 Part 1 | User 1 noticed that the choice they made at the same time the previous day lead to the choice theyre at now. | "Oh thats cause i talked to the cows instead of feeding them. |  
+| Myself | Day 2 Part 1 | User 1 noticed that the choice they made at the same time the previous day lead to the choice theyre at now. | "Oh thats cause i talked to the cows instead of feeding them. |  |
 
 ## Questionnaire results
 
