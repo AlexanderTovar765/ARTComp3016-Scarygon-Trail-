@@ -20,7 +20,7 @@ These are real results, but they test the rules and the code, not how people rea
 | Difficulty and balance | `tools/balance_sim.cpp` plays 20,000 games per strategy (Random, Greedy, Cautious, Reckless) | Random play survives 67.1% of runs and loses 0.19 family members on average. Greedy and Cautious survive 100%. Reckless survives 0%. See [balance-report.md](balance-report.md) |
 | Rules and loaders | `tests/logic_tests.cpp`, 25 test groups | 14,202 checks, all passing. See [test-cases.md](test-cases.md) |
 | Layout and flow | Scripted headless playthroughs to every ending, with screenshots | Pass |
-| My own play testing | PLACEHOLDER: dates, what you found and fixed | PLACEHOLDER |
+| My own play testing |  |  |
 
 ## Session log
 
