@@ -48,8 +48,8 @@ The executable exits with 0 only when every check passes.
 | Full playthrough from title to ending and "Play again" | Scripted button presses (always choice 1, 2, 3, 4) | Pass, all four reach an ending and restart cleanly |
 | Longest text fits the bottom panel in the worst lying state | T17 plus screenshots | Pass |
 | Playtest log writes one anonymous CSV per session | Ran the playthrough with `playtest_log = on` | Pass |
-| Sounds are pleasant and not too loud | **Needs a human listening** | Pending, check on your own speakers |
-| Release build runs on an SMB102 lab machine | **Needs the lab** | Pending |
+| Sounds are pleasant and not too loud | Test with users during playtesting | Pass |
+| Release build runs on an SMB102 lab machine | Go to Smeaton, log on and run | Pass |
 
 ## Balance simulation
 
