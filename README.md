@@ -1,8 +1,8 @@
 # The Scarygon Trail
 
-A comedic survival-horror resource-management game inspired by *The Oregon Trail*, built in C++ with SDL3 for COMP3016 (Immersive Game Technologies) Coursework 1.
+An amusing survival horror game that has been influenced by William’s *Oregon Trail*; developed in C++ utilizing the SDL3 system for COMP3016 (Immersive Game Technologies) coursework 1.
 
-Every stop on the trail presents a short narrative event, delivered in the same flat, matter-of-fact tone whether it's a broken wheel or something considerably stranger. Keep a family of four alive, manage food, health, sanity and wagon condition, and live with the consequences of your choices.
+At every point along the route, there are brief narrative events in a monotonous delivery, regardless of the event, whether it involves a broken wagon wheel or something of that sort. It challenges players to keep a family of four alive by managing their food, health, sanity, and wagon condition, and to experience the consequences of their actions.
 
 **Repository:** https://github.com/AlexanderTovar765/ARTComp3016-Scarygon-Trail-
 **Video (unlisted YouTube, max 10 minutes):** PLACEHOLDER: add the YouTube link
