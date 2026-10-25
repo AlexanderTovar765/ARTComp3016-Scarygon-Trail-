@@ -10,7 +10,7 @@ ctest --test-dir build --output-on-failure
 
 The executable exits with 0 only when every check passes.
 
-**Latest run:** 14202 checks, 0 failed, with the silent audio stub and again with the real irrKlang engine (null sound device). The two failures found while writing them were both useful: the lying-text test showed that a "lying" state could occasionally change nothing (now it always swaps at least one word), and one expectation about the hardship toll was my arithmetic error (the average of the members' health drops by 4, not 3).
+**Latest run:** 14,202 checks, which means that there were no failures with either the silent audio stub or the real irrKlang engine (the sound device). Two failures noticed during these checks have been beneficial: the lying-text check showed that state "lying" can sometimes do absolutely nothing (while nowadays it can change at least one word), and the only mistake regarding hardship has been in calculations (members lose an average of 4 points of health, not 3).
 
 | ID | What is checked | Type | Result |
 |---|---|---|---|
