@@ -1,0 +1,7 @@
+# Game settings. One "key = value" per line; values are on or off.
+#
+# audio        - play sound (needs irrKlang; see tools/get-irrklang.ps1). Also toggled in-game with M.
+# playtest_log - write an anonymous log of the choices made to playtest_logs/. Toggled on the
+#                title screen with L. Turn it off for the final release if you prefer.
+audio = on
+playtest_log = off

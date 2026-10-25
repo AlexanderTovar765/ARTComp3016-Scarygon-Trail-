@@ -81,6 +81,16 @@ namespace {
         fillCircle(r, cx, cy, 2.5f);
     }
 
+    void strokeEllipse(SDL_Renderer* r, float cx, float cy, float rx, float ry) {
+        const int segments = 24;
+        for (int i = 0; i < segments; ++i) {
+            const float a0 = 2.0f * kPi * static_cast<float>(i) / segments;
+            const float a1 = 2.0f * kPi * static_cast<float>(i + 1) / segments;
+            SDL_RenderLine(r, cx + std::cos(a0) * rx, cy + std::sin(a0) * ry,
+                              cx + std::cos(a1) * rx, cy + std::sin(a1) * ry);
+        }
+    }
+
     // An ox seen from the side. It is looking straight at you. It always is.
     void drawOx(SDL_Renderer* r, float x, float groundY, float legPhase) {
         setColor(r, kOxHide);
@@ -105,7 +115,7 @@ namespace {
 }
 
 void SceneRenderer::drawScene(SDL_Renderer* r, const SDL_FRect& area, TimePart part,
-                              Uint64 timeMs, float dread) const {
+                              Uint64 timeMs, float dread, float travel) const {
     const int index = static_cast<int>(part);
     const Palette& palette = kPalettes[index];
     const float horizon = area.y + area.h * 0.62f;
@@ -155,7 +165,9 @@ void SceneRenderer::drawScene(SDL_Renderer* r, const SDL_FRect& area, TimePart p
     // Wagon (bobs gently, wheels roll)
     const float groundY = roadY + (area.y + area.h - roadY) * 0.40f;
     const float bob = std::sin(seconds * 6.0f) * 1.5f;
-    const float wagonX = area.x + area.w * 0.12f;
+    const float wagonX = travel >= 0.0f
+        ? area.x - 290.0f + (area.w + 290.0f) * std::min(1.0f, travel)   // drives across and off the edge
+        : area.x + area.w * 0.12f;
     const float wagonBottom = groundY - 14.0f + bob;
 
     setColor(r, kWagonWood);
@@ -182,6 +194,97 @@ void SceneRenderer::drawScene(SDL_Renderer* r, const SDL_FRect& area, TimePart p
 
     SDL_SetRenderClipRect(r, nullptr);
     setColor(r, kOutline);
+    SDL_RenderRect(r, &area);
+}
+
+void SceneRenderer::drawPortrait(SDL_Renderer* r, const SDL_FRect& area, int memberIndex,
+                                 PartyMember::Status status) const {
+    const bool dead = status == PartyMember::Status::Dead;
+    const bool ill  = status == PartyMember::Status::Ill;
+
+    // Card
+    if (dead)     SDL_SetRenderDrawColor(r, 190, 190, 190, 255);
+    else if (ill) SDL_SetRenderDrawColor(r, 205, 218, 170, 255);
+    else          SDL_SetRenderDrawColor(r, 236, 224, 196, 255);
+    fillRect(r, area.x, area.y, area.w, area.h);
+
+    const float cx = area.x + area.w * 0.5f;
+    const float cy = area.y + area.h * 0.60f;
+    const float radius = memberIndex == 2 ? 14.0f : 17.0f;  // Junior is smaller
+
+    // Face
+    if (dead)     SDL_SetRenderDrawColor(r, 205, 205, 205, 255);
+    else if (ill) SDL_SetRenderDrawColor(r, 168, 200, 140, 255);
+    else          SDL_SetRenderDrawColor(r, 238, 200, 162, 255);
+    fillCircle(r, cx, cy, radius);
+
+    // What makes each member recognisable
+    switch (memberIndex) {
+    case 0:  // Ma: blue bonnet with a bow
+        SDL_SetRenderDrawColor(r, 120, 140, 175, 255);
+        fillDome(r, cx, cy - 3.0f, radius + 3.0f, 19.0f);
+        SDL_SetRenderDrawColor(r, 200, 90, 90, 255);
+        fillRect(r, cx - 4.0f, cy - radius - 3.0f, 8.0f, 4.0f);
+        break;
+    case 1:  // Pa: hat and moustache
+        SDL_SetRenderDrawColor(r, 70, 50, 38, 255);
+        fillRect(r, cx - 11.0f, cy - radius - 9.0f, 22.0f, 12.0f);   // crown
+        fillRect(r, cx - 19.0f, cy - radius + 2.0f, 38.0f, 4.0f);    // brim
+        SDL_SetRenderDrawColor(r, 90, 60, 40, 255);
+        fillRect(r, cx - 8.0f, cy + 5.0f, 16.0f, 3.0f);              // moustache
+        break;
+    case 2:  // Junior: messy hair
+        SDL_SetRenderDrawColor(r, 120, 72, 40, 255);
+        fillDome(r, cx, cy - 4.0f, radius, 14.0f);
+        SDL_RenderLine(r, cx - 9.0f, cy - radius + 2.0f, cx - 13.0f, cy - radius - 5.0f);
+        SDL_RenderLine(r, cx,        cy - radius,        cx + 1.0f,  cy - radius - 7.0f);
+        SDL_RenderLine(r, cx + 9.0f, cy - radius + 2.0f, cx + 13.0f, cy - radius - 5.0f);
+        break;
+    default:  // Granny: white hair, bun and glasses
+        SDL_SetRenderDrawColor(r, 238, 238, 238, 255);
+        fillDome(r, cx, cy - 4.0f, radius + 1.0f, 15.0f);
+        fillCircle(r, cx, cy - radius - 5.0f, 6.0f);
+        break;
+    }
+
+    // Eyes and mouth
+    SDL_SetRenderDrawColor(r, 50, 35, 25, 255);
+    if (dead) {
+        for (int side = -1; side <= 1; side += 2) {              // crossed-out eyes
+            const float ex = cx + static_cast<float>(side) * 6.0f;
+            SDL_RenderLine(r, ex - 3.0f, cy - 5.0f, ex + 3.0f, cy + 1.0f);
+            SDL_RenderLine(r, ex - 3.0f, cy + 1.0f, ex + 3.0f, cy - 5.0f);
+        }
+        fillRect(r, cx - 5.0f, cy + 8.0f, 10.0f, 2.0f);          // flat mouth
+    } else {
+        fillRect(r, cx - 8.0f, cy - 3.0f, 3.0f, ill ? 2.0f : 4.0f);   // eyes (droopy when ill)
+        fillRect(r, cx + 5.0f, cy - 3.0f, 3.0f, ill ? 2.0f : 4.0f);
+        if (ill) {
+            fillRect(r, cx - 5.0f, cy + 8.0f, 4.0f, 2.0f);       // wobbly mouth
+            fillRect(r, cx - 1.0f, cy + 9.0f, 4.0f, 2.0f);
+            fillRect(r, cx + 3.0f, cy + 8.0f, 3.0f, 2.0f);
+        } else {
+            fillRect(r, cx - 5.0f, cy + 8.0f, 10.0f, 2.0f);      // small smile
+            fillRect(r, cx - 6.0f, cy + 7.0f, 2.0f, 2.0f);
+            fillRect(r, cx + 4.0f, cy + 7.0f, 2.0f, 2.0f);
+        }
+    }
+    if (memberIndex == 3 && !dead) {                             // Granny's glasses
+        strokeCircle(r, cx - 6.5f, cy - 1.5f, 5.0f);
+        strokeCircle(r, cx + 6.5f, cy - 1.5f, 5.0f);
+    }
+
+    if (ill) {                                                   // sweat drop
+        SDL_SetRenderDrawColor(r, 110, 170, 230, 255);
+        fillCircle(r, cx + radius - 1.0f, cy - 9.0f, 3.0f);
+    }
+    if (dead) {                                                  // halo
+        SDL_SetRenderDrawColor(r, 235, 190, 60, 255);
+        strokeEllipse(r, cx, area.y + 7.0f, 11.0f, 3.5f);
+        strokeEllipse(r, cx, area.y + 7.0f, 11.0f, 2.5f);
+    }
+
+    SDL_SetRenderDrawColor(r, 50, 35, 25, 255);
     SDL_RenderRect(r, &area);
 }
 

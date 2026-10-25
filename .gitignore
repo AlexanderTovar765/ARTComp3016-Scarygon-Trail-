@@ -25,3 +25,8 @@
 *.o
 .DS_Store
 Thumbs.db
+
+# irrKlang is NOT redistributable as an archive: download it with tools/get-irrklang.ps1
+/vendored/irrKlang/
+# Optional anonymous playtest logs written by the game at runtime
+/playtest_logs/

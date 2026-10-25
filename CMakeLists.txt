@@ -32,19 +32,42 @@ else()
 endif()
 
 # ---- Game ------------------------------------------------------------------
+set(GAME_LOGIC_SOURCES
+    src/Effects.cpp
+    src/PartyMember.cpp
+    src/Party.cpp
+    src/ThresholdWatcher.cpp
+    src/MemberWatcher.cpp
+    src/Trail.cpp
+    src/NarrativeState.cpp
+    src/Settings.cpp
+    src/PlaytestLog.cpp
+    src/AudioManager.cpp)
+
 add_executable(ScarygonTrail
     src/main.cpp
     src/Game.cpp
     src/Button.cpp
     src/TextRenderer.cpp
-    src/Effects.cpp
-    src/Party.cpp
-    src/Trail.cpp
-    src/NarrativeState.cpp
-    src/SceneRenderer.cpp)
+    src/SceneRenderer.cpp
+    ${GAME_LOGIC_SOURCES})
 
 target_include_directories(ScarygonTrail PRIVATE src)
 target_link_libraries(ScarygonTrail PRIVATE SDL3::SDL3)
+
+# ---- Sound (optional) -------------------------------------------------------
+# irrKlang cannot be redistributed as an archive, so it is not in the repo. Run
+# tools/get-irrklang.ps1 to download it into vendored/irrKlang. Without it the game
+# still builds and runs, just silently.
+set(IRRKLANG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendored/irrKlang")
+set(HAVE_IRRKLANG OFF)
+if(WIN32 AND EXISTS "${IRRKLANG_DIR}/include/irrKlang.h" AND EXISTS "${IRRKLANG_DIR}/lib/irrKlang.lib")
+    set(HAVE_IRRKLANG ON)
+    target_compile_definitions(ScarygonTrail PRIVATE SCARYGON_USE_IRRKLANG)
+    target_include_directories(ScarygonTrail PRIVATE "${IRRKLANG_DIR}/include")
+    target_link_libraries(ScarygonTrail PRIVATE "${IRRKLANG_DIR}/lib/irrKlang.lib")
+endif()
+message(STATUS "irrKlang sound: ${HAVE_IRRKLANG}")
 
 if(MSVC)
     target_compile_options(ScarygonTrail PRIVATE /W3)
@@ -52,28 +75,41 @@ else()
     target_compile_options(ScarygonTrail PRIVATE -Wall -Wextra)
 endif()
 
+# ---- Tests and tools (not part of the normal build) -------------------------
+# cmake --build . --target logic_tests && ctest   (run from the repo root: tests read data/ and assets/)
+add_executable(logic_tests EXCLUDE_FROM_ALL tests/logic_tests.cpp src/TextRenderer.cpp ${GAME_LOGIC_SOURCES})
+target_include_directories(logic_tests PRIVATE src)
+target_link_libraries(logic_tests PRIVATE SDL3::SDL3)
+enable_testing()
+add_test(NAME logic_tests COMMAND logic_tests WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
+add_executable(balance_sim EXCLUDE_FROM_ALL tools/balance_sim.cpp
+    src/Effects.cpp src/PartyMember.cpp src/Party.cpp src/ThresholdWatcher.cpp
+    src/MemberWatcher.cpp src/Trail.cpp src/NarrativeState.cpp)
+target_include_directories(balance_sim PRIVATE src)
+
 # ---- Runtime files next to the executable ----------------------------------
 # data/ is refreshed on every build, so edits to data/events.txt are picked up.
 add_custom_target(copy_game_data
     COMMAND ${CMAKE_COMMAND} -E copy_directory
             "${CMAKE_CURRENT_SOURCE_DIR}/data" "$<TARGET_FILE_DIR:ScarygonTrail>/data"
     COMMENT "Copying data/ next to the executable")
-add_dependencies(ScarygonTrail copy_game_data)
+add_custom_target(copy_game_audio
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/assets/audio" "$<TARGET_FILE_DIR:ScarygonTrail>/assets/audio"
+    COMMENT "Copying assets/audio next to the executable")
+add_dependencies(ScarygonTrail copy_game_data copy_game_audio)
 
 if(WIN32)
     add_custom_command(TARGET ScarygonTrail POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 "${SDL3_VENDOR_DIR}/lib/x64/SDL3.dll" "$<TARGET_FILE_DIR:ScarygonTrail>"
         COMMENT "Copying SDL3.dll next to the executable")
+    if(HAVE_IRRKLANG)
+        file(GLOB IRRKLANG_DLLS "${IRRKLANG_DIR}/bin/*.dll")
+        foreach(dll ${IRRKLANG_DLLS})
+            add_custom_command(TARGET ScarygonTrail POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${dll}" "$<TARGET_FILE_DIR:ScarygonTrail>")
+        endforeach()
+    endif()
 endif()
-
-# ---- Optional: balance simulator (no SDL needed) ---------------------------
-# Not part of the normal build. Build it with:  cmake --build <dir> --target balance_sim
-# Run it from the repo root:                    <dir>/balance_sim data/events.txt 20000
-add_executable(balance_sim EXCLUDE_FROM_ALL
-    tools/balance_sim.cpp
-    src/Trail.cpp
-    src/Party.cpp
-    src/Effects.cpp
-    src/NarrativeState.cpp)
-target_include_directories(balance_sim PRIVATE src)

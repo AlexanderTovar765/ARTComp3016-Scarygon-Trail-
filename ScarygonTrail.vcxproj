@@ -56,8 +56,27 @@
       <AdditionalDependencies>SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(ProjectDir)vendored\SDL3\lib\x64\SDL3.dll" "$(OutDir)"&#x0D;&#x0A;xcopy /Y /D /E /I "$(ProjectDir)data" "$(OutDir)data"</Command>
-      <Message>Copying SDL3.dll and the data folder next to the executable</Message>
+      <Command>xcopy /Y /D "$(ProjectDir)vendored\SDL3\lib\x64\SDL3.dll" "$(OutDir)"&#x0D;&#x0A;xcopy /Y /D /E /I "$(ProjectDir)data" "$(OutDir)data"&#x0D;&#x0A;xcopy /Y /D /E /I "$(ProjectDir)assets\audio" "$(OutDir)assets\audio"</Command>
+      <Message>Copying SDL3.dll, data and sounds next to the executable</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <!-- Sound is optional: if irrKlang has been downloaded into vendored\irrKlang (see tools\get-irrklang.ps1)
+       the game is built with sound; otherwise it builds and runs silently. -->
+  <PropertyGroup Condition="Exists('$(ProjectDir)vendored\irrKlang\include\irrKlang.h') And Exists('$(ProjectDir)vendored\irrKlang\lib\irrKlang.lib')">
+    <UseIrrKlang>true</UseIrrKlang>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(UseIrrKlang)'=='true'">
+    <ClCompile>
+      <PreprocessorDefinitions>SCARYGON_USE_IRRKLANG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)vendored\irrKlang\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(ProjectDir)vendored\irrKlang\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>irrKlang.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "$(ProjectDir)vendored\SDL3\lib\x64\SDL3.dll" "$(OutDir)"&#x0D;&#x0A;xcopy /Y /D /E /I "$(ProjectDir)data" "$(OutDir)data"&#x0D;&#x0A;xcopy /Y /D /E /I "$(ProjectDir)assets\audio" "$(OutDir)assets\audio"&#x0D;&#x0A;xcopy /Y /D "$(ProjectDir)vendored\irrKlang\bin\*.dll" "$(OutDir)"</Command>
+      <Message>Copying SDL3.dll, irrKlang DLLs, data and sounds next to the executable</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -88,6 +107,12 @@
     <ClCompile Include="src\Trail.cpp" />
     <ClCompile Include="src\NarrativeState.cpp" />
     <ClCompile Include="src\SceneRenderer.cpp" />
+    <ClCompile Include="src\PartyMember.cpp" />
+    <ClCompile Include="src\ThresholdWatcher.cpp" />
+    <ClCompile Include="src\MemberWatcher.cpp" />
+    <ClCompile Include="src\Settings.cpp" />
+    <ClCompile Include="src\PlaytestLog.cpp" />
+    <ClCompile Include="src\AudioManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Game.h" />
@@ -100,6 +125,15 @@
     <ClInclude Include="src\Trail.h" />
     <ClInclude Include="src\NarrativeState.h" />
     <ClInclude Include="src\SceneRenderer.h" />
+    <ClInclude Include="src\Stat.h" />
+    <ClInclude Include="src\Conditions.h" />
+    <ClInclude Include="src\PartyObserver.h" />
+    <ClInclude Include="src\PartyMember.h" />
+    <ClInclude Include="src\ThresholdWatcher.h" />
+    <ClInclude Include="src\MemberWatcher.h" />
+    <ClInclude Include="src\Settings.h" />
+    <ClInclude Include="src\PlaytestLog.h" />
+    <ClInclude Include="src\AudioManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

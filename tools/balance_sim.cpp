@@ -6,7 +6,7 @@
 //
 // Usage:   balance_sim [path/to/events.txt] [runs]      (defaults: data/events.txt, 20000)
 // Build (Visual Studio Developer PowerShell, from the repo root):
-//   cl /std:c++17 /EHsc /O2 /Isrc tools\balance_sim.cpp src\Trail.cpp src\Party.cpp src\Effects.cpp src\NarrativeState.cpp /Fe:balance_sim.exe
+//   cl /std:c++17 /EHsc /O2 /Isrc tools\balance_sim.cpp src\Trail.cpp src\Party.cpp src\PartyMember.cpp src\ThresholdWatcher.cpp src\MemberWatcher.cpp src\Effects.cpp src\NarrativeState.cpp /Fe:balance_sim.exe
 // Build (CMake):  cmake --build <build-dir> --target balance_sim
 
 #include <algorithm>
@@ -21,6 +21,7 @@
 
 #include "NarrativeState.h"
 #include "Party.h"
+#include "ThresholdWatcher.h"
 #include "Trail.h"
 
 namespace {
@@ -75,20 +76,34 @@ namespace {
         int starvedRuns = 0;
         long long partsPlayed = 0, partsStable = 0, partsUnreliable = 0, partsBreakdown = 0;
         int ranIntoUnreliable = 0, ranIntoBreakdown = 0;
+        long long membersLost = 0;                 // family members who died, summed over all runs
+        long long desperateShown = 0;              // desperate variants that appeared
+        int runsWithDesperate = 0;
+        std::map<int, int> survivorCounts;         // family members alive at the end -> runs
+        std::map<std::string, int> variantRuns;    // desperate variant (by condition) -> runs that saw it
     };
 
     void playOne(const Trail& original, Strategy strategy, std::mt19937& rng, Results& out) {
         Trail trail = original;
         trail.reset();
         Party party;
-        bool starved = false, sawUnreliable = false, sawBreakdown = false;
+        ThresholdWatcher watcher;                   // the same observer the game uses
+        party.addObserver(&watcher);
+        bool starved = false, sawUnreliable = false, sawBreakdown = false, sawDesperate = false;
+        std::map<std::string, bool> seenVariant;
         const int lastDay = trail.lastDay();
         bool alive = true;
 
         for (int day = 1; day <= lastDay && alive; ++day) {
             for (int p = 0; p < kPartsPerDay && alive; ++p) {
-                const Event* event = trail.getEvent(day, static_cast<TimePart>(p));
+                const Event* event = trail.getEvent(day, static_cast<TimePart>(p), watcher.active());
                 if (!event) continue;
+                if (event->getCondition()) {
+                    ++out.desperateShown;
+                    sawDesperate = true;
+                    seenVariant["Day " + std::to_string(day) + " " + partName(static_cast<TimePart>(p)) + " (" +
+                                conditionName(*event->getCondition()) + ")"] = true;
+                }
 
                 const NarrativeKind kind = NarrativeState::kindForSanity(party.getSanity());
                 ++out.partsPlayed;
@@ -97,8 +112,8 @@ namespace {
                 if (kind == NarrativeKind::Breakdown)  { ++out.partsBreakdown;  sawBreakdown = true; }
 
                 party.apply(event->getChoices()[pick(strategy, *event, party, rng)].getEffects());
-                const Effects upkeep = party.advanceTime();
-                if (upkeep.health < 0) starved = true;
+                party.advanceTime();
+                if (party.getFood() == 0) starved = true;
 
                 if (!party.isAlive()) {
                     alive = false;
@@ -110,6 +125,10 @@ namespace {
         }
 
         ++out.runs;
+        out.membersLost += kMemberCount - party.aliveCount();
+        ++out.survivorCounts[party.aliveCount()];
+        if (sawDesperate) ++out.runsWithDesperate;
+        for (const auto& v : seenVariant) ++out.variantRuns[v.first];
         if (alive) {
             ++out.survived;
             out.finalFood += party.getFood();   out.finalHealth += party.getHealth();
@@ -140,15 +159,14 @@ int main(int argc, char** argv) {
 
     std::cout << "# Balance report\n\n"
               << "Source: `" << path << "` (" << trail.eventCount() << " events, " << trail.lastDay()
-              << " days). " << runs << " simulated runs per strategy, fixed random seed.\n\n"
+              << " days, including desperate variants). " << runs << " simulated runs per strategy, fixed random seed.\n\n"
               << "Start: Food " << Party::kStartFood << ", other stats " << Party::kMaxStat
-              << ". After every part the trail takes its toll: Food -" << Party::kFoodPerPart << ", Sanity -"
-              << Party::kSanityPerPart << ", Wagon -" << Party::kWagonPerPart << "; at 0 food the party also loses "
+              << ". Each part: the party eats " << Party::kFoodPerPart << " food; at 0 food it loses "
               << Party::kStarvationDamage << " health. Health, Sanity or Wagon at 0 ends the run.\n\n";
 
     std::cout << "## Survival by strategy\n\n"
-              << "| Strategy | Survives all days | Starved at some point | Reached Unreliable | Reached Breakdown |\n"
-              << "|---|---|---|---|---|\n";
+              << "| Strategy | Survives all days | Starved at some point | Reached Unreliable | Reached Breakdown | Saw a desperate event | Avg family lost |\n"
+              << "|---|---|---|---|---|---|---|\n";
 
     std::vector<std::pair<Strategy, Results>> all;
     for (Strategy s : { Strategy::Random, Strategy::Greedy, Strategy::Cautious, Strategy::Reckless }) {
@@ -158,7 +176,8 @@ int main(int argc, char** argv) {
         all.emplace_back(s, r);
         std::cout << "| " << strategyName(s) << " | " << pct(r.survived, r.runs) << " | "
                   << pct(r.starvedRuns, r.runs) << " | " << pct(r.ranIntoUnreliable, r.runs) << " | "
-                  << pct(r.ranIntoBreakdown, r.runs) << " |\n";
+                  << pct(r.ranIntoBreakdown, r.runs) << " | " << pct(r.runsWithDesperate, r.runs) << " | "
+                  << std::fixed << std::setprecision(2) << static_cast<double>(r.membersLost) / r.runs << " |\n";
     }
 
     for (const auto& entry : all) {
@@ -174,6 +193,14 @@ int main(int argc, char** argv) {
             std::cout << "Average final stats of survivors: Food " << r.finalFood / r.survived
                       << ", Health " << r.finalHealth / r.survived << ", Sanity " << r.finalSanity / r.survived
                       << ", Wagon " << r.finalWagon / r.survived << ".\n\n";
+        }
+        std::cout << "Desperate variants seen (share of runs):\n\n";
+        for (const auto& v : r.variantRuns) std::cout << "- " << v.first << ": " << pct(v.second, r.runs) << "\n";
+        std::cout << "\n";
+        std::cout << "Family members alive at the end: ";
+        for (int n = kMemberCount; n >= 0; --n) {
+            std::cout << n << " alive " << pct(r.survivorCounts.count(n) ? r.survivorCounts.at(n) : 0, r.runs)
+                      << (n > 0 ? ", " : ".\n\n");
         }
         std::cout << "Deaths (" << r.runs - r.survived << " of " << r.runs << " runs):\n\n";
         for (const auto& d : r.deaths) {

@@ -2,8 +2,7 @@
 #include <memory>
 #include <string>
 
-// The four party stats shown on the HUD.
-enum class Stat { Food = 0, Health, Sanity, Wagon };
+#include "Stat.h"
 
 enum class NarrativeKind { Stable, Unreliable, Breakdown };
 
