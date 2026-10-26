@@ -74,7 +74,7 @@ Three playable days. Each day has 5 parts (Dawn, Mid-Morning, Noon, Evening, Nig
 - **Sound:** ambience that follows the narrator state, plus effects for choices, warnings and deaths.
 - **Ending:** the run ends if the whole family dies, or Sanity or the Wagon reaches 0, or the three days are completed.
 
-PLACEHOLDER: add a paragraph in your own words about what a run feels like and what makes it unique.
+Any playthrough of the game can lead to a merriad of different results, no one combination of choices can provide identical stats. Its this idea along with the fun prompts that call for the player to do a 2nd run and see another outcome.
 
 ## 4. Sample screens
 
@@ -97,17 +97,16 @@ PLACEHOLDER: add a paragraph in your own words about what a run feels like and w
 - **irrKlang 1.6.0** (optional, downloaded by `tools/get-irrklang.ps1`): sound.
 - Nothing else beyond the standard C++17 library.
 
-## 6. Use of AI-COME BACK TO
+## 6. Use of AI/AI Development Log
 
-PLACEHOLDER: two or three paragraphs in your own words: which tool you used, what for, what you reviewed and changed, and what you decided yourself.
+I have used ChatGPT as I mentioned in my AI log. Although it was mentioned in my project proposal, I have noted how I have used it in my work on this project. For instance, AI helped in writing various parts of my C++ code, documentation, the text of the event, various types of tests, balance simulator, and sound script. I took important decisions about design such as humorous horror tone, split-panel layout, three-day framework, and that unreliable narration impacts just the presentational aspect but does not affect gameplay. For example, I had balance simulator showing 99.9% survival with random gameplay, so I had the idea to add penalties for tolls and starvation. One of the tests also predicted that the wrong health is going to be decreased because of incorrect arithmetic, so I had to fix the test rather than the game code. Lastly, I have made the unreliable narration that shifts at least one word.
+My contributions can be tracked in commits like 587643e, bbf2a29, and 1b3f873 where I worked on the event loader, Day 1 events, Days 2 and 3 with the narrator and the balance simulator. I have checked the work done by AI by compiling
 
 The full account is in the AI Development Log (section 7). The signed Generative AI Declaration is included as an appendix: PLACEHOLDER: link or attach the signed form.
 
-## 7. AI Development Log
-
 See [docs/ai-dev-log.md](docs/ai-dev-log.md) for the AI tools used, categories of use, example prompts, the verification process, and repository evidence.
 
-## 8. Game programming patterns-ASK CLAUDE FOR PLACEHOLDER
+## 7. Game programming patterns-ASK CLAUDE FOR PLACEHOLDER
 
 | Pattern | Where | Why |
 |---|---|---|
@@ -120,7 +119,7 @@ See [docs/ai-dev-log.md](docs/ai-dev-log.md) for the AI tools used, categories o
 
 The game’s central joke is that the narrator gets less trustworthy as sanity drops. The State pattern lets Game swap one narrator object (Stable, Unreliable or Breakdown) without any if chains, and it keeps the lying confined to the presentation, so the rules stay fair. The Observer pattern suits a game where the family’s condition keeps changing, because Party can announce a low-food warning or a death without knowing who is listening, so new reactions can be added without touching the party’s rules.
 
-## 9. Game mechanics and how they are coded
+## 8. Game mechanics and how they are coded
 
 | Mechanic | How it works | Code |
 |---|---|---|
@@ -134,7 +133,7 @@ The game’s central joke is that the narrator gets less trustworthy as sanity d
 | Sound | Ambience follows the narrator state; effects play for choices, warnings and deaths | `AudioManager` |
 | Playtest log | Optional anonymous CSV of the choices made | `PlaytestLog`, `Settings` |
 
-## 10. UML design diagram
+## 9. UML design diagram
 New Design:
 ```mermaid
 classDiagram
@@ -183,7 +182,7 @@ classDiagram
 Old Design: <img width="446" height="587" alt="Screenshot 2026-10-22 093603" src="https://github.com/user-attachments/assets/8f8d3295-d754-4473-a2c7-cbcd432fc2f6" />
   
 
-## 11. Exception handling and test cases
+## 10. Exception handling and test cases
 
 The code does not use C++ exceptions. Instead it validates input and reports problems, so bad data cannot crash the game:
 
@@ -202,7 +201,7 @@ cmake --build build --target logic_tests
 ctest --test-dir build --output-on-failure
 ```
 
-## 12. Playtesting evidence and reflection-COME BACK TO
+## 11. Playtesting evidence and reflection-COME BACK TO
 
 Evidence (session log, observation notes, questionnaire results) is in [docs/playtesting.md](docs/playtesting.md). PLACEHOLDER: link the playtest folder (for example `docs/playtest/`) once it is in the repository, and link the GitHub Issues that came from tester feedback.
 
@@ -214,7 +213,7 @@ Evidence (session log, observation notes, questionnaire results) is in [docs/pla
 - **Changes implemented:** PLACEHOLDER: each change with its issue number and commit.
 - **Remaining limitations:** PLACEHOLDER
 
-## 13. Further details
+## 12. Further details
 
 - **Project structure**
 
