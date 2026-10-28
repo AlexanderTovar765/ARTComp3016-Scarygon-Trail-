@@ -89,9 +89,9 @@ void PlaytestLog::row(const std::string& type, const std::string& day, const std
     m_file.flush();  // flush every row so a crash or force-quit still leaves a usable log
 }
 
-void PlaytestLog::logRunStart() {
+void PlaytestLog::logRunStart(const std::string& note) {
     ++m_run;
-    row("START", "", "", "", "", "", "", "", "", "", "", "", "new run");
+    row("START", "", "", "", "", "", "", "", "", "", "", "", note);
 }
 
 void PlaytestLog::logChoice(int day, const std::string& part, const std::string& variant, int choiceNumber,

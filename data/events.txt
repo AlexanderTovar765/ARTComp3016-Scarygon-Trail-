@@ -5,6 +5,13 @@
 #   [CHOICE]  starts a choice for the event above (1 to 4 per event).
 #             Keys: label, result, food, health, sanity, wagon
 #             member = Ma|Pa|Junior|Granny  (optional: health damage/healing hits only that person)
+#   Animations (optional, decoration only; a bad name is a warning and never skips the event):
+#     scene  = ...   an [EVENT] key: the backdrop and actor shown while the event is on screen.
+#                    trail, oxen_stare, map_man, deer, herd, ritual, figure, crowd, tidy_wagon, river,
+#                    travellers, oxen_circle, voice, new_road, cook_camp
+#     action = ...   a [CHOICE] key: what the family does on the result screen.
+#                    feed, eat, rush, ask, buy, refuse, flee, fight, hide, pray, steal, sleep, give,
+#                    cross, inspect, shoot, join, wait, build, burn
 #   Event key  requires = LowFood|LowWagon|LowHealth  makes the event a DESPERATE VARIANT that
 #             replaces the normal event for its slot while that condition is true.
 #   part is one of: Dawn, Mid-Morning, Noon, Evening, Night
@@ -22,9 +29,11 @@
 day = 1
 part = Dawn
 text = You wake before the sun. The oxen are already awake and looking at you. They have been looking at you for some time.
+scene = oxen_stare
 
 [CHOICE]
 label = Feed the oxen first
+action = feed
 result = The oxen eat. They do not thank you, but the staring stops, which counts for something.
 food = -5
 sanity = 3
@@ -32,6 +41,7 @@ wagon = 5
 
 [CHOICE]
 label = Cook a hot breakfast for the family
+action = eat
 result = Everyone eats well. Your son asks whether the oxen will be eating anyone later. You say no. He seems unconvinced.
 food = -8
 health = 8
@@ -39,12 +49,14 @@ sanity = 2
 
 [CHOICE]
 label = Skip breakfast and break camp early
+action = rush
 result = You are on the trail before the dew dries. Your stomach files a formal complaint.
 health = -6
 sanity = -2
 
 [CHOICE]
 label = Ask the oxen what they are looking at
+action = ask
 result = The oxen turn in unison toward the tree line. You decide not to ask a follow-up question.
 sanity = -8
 
@@ -54,9 +66,11 @@ sanity = -8
 day = 1
 part = Mid-Morning
 text = A man at the roadside is selling maps. They are maps of a place you have never heard of. He insists it is where you are going.
+scene = map_man
 
 [CHOICE]
 label = Buy a map
+action = buy
 result = The map is detailed and completely accurate, which is the worst part.
 food = -4
 sanity = -6
@@ -64,6 +78,7 @@ wagon = 10
 
 [CHOICE]
 label = Haggle down the price
+action = ask
 result = He agrees to half price far too quickly. His smile does not move at any point during the exchange.
 food = -2
 sanity = -3
@@ -71,11 +86,13 @@ wagon = 5
 
 [CHOICE]
 label = Decline and keep moving
+action = refuse
 result = He waves. He is still waving when you lose sight of him, which should not be possible on flat ground.
 sanity = -5
 
 [CHOICE]
 label = Ask where he got the maps
+action = ask
 result = He says the maps got him. You thank him for his time. He gives you a jar of jerky as an apology.
 food = 8
 sanity = -10
@@ -86,15 +103,18 @@ sanity = -10
 day = 1
 part = Noon
 text = A deer stands in the middle of the road. It is calm and makes direct eye contact. It does not seem to be afraid of you.
+scene = deer
 
 [CHOICE]
 label = Shoot the deer
+action = shoot
 result = The shot is clean. The deer falls over as though it expected this. You will eat well tonight.
 food = 20
 sanity = -6
 
 [CHOICE]
 label = Wait for it to move
+action = wait
 result = It does not move. After an hour you both agree to let this go. The family naps in the shade.
 food = -3
 health = 4
@@ -102,12 +122,14 @@ sanity = 3
 
 [CHOICE]
 label = Offer it some of your food
+action = give
 result = It eats and leaves a small stack of coins on the ground. You are not sure what to make of this.
 food = -8
 sanity = 5
 
 [CHOICE]
 label = Challenge the deer to a duel
+action = fight
 member = Pa
 result = The deer wins. It politely does not finish the job and takes your hat as a trophy.
 health = -20
@@ -119,9 +141,11 @@ sanity = -4
 day = 1
 part = Evening
 text = Your son has skipped three meals and has taken up Satanism in an attempt to curse you. He has drawn a circle in the dirt and is waiting for you to notice.
+scene = ritual
 
 [CHOICE]
 label = Feed him a proper meal
+action = give
 member = Junior
 result = He eats everything and quietly renounces Satan. The circle remains, but it looks tired.
 food = -10
@@ -130,12 +154,14 @@ sanity = 8
 
 [CHOICE]
 label = Ask what the curse involves
+action = ask
 result = It is mostly about your hair and your parenting. He feels heard, and the curse is downgraded to a strongly worded letter.
 food = -2
 sanity = 4
 
 [CHOICE]
 label = Pretend you did not see it
+action = hide
 member = Ma
 result = The curse takes effect. Your boots are now slightly too small, permanently.
 health = -14
@@ -143,6 +169,7 @@ sanity = -4
 
 [CHOICE]
 label = Step into the circle
+action = join
 result = It is surprisingly warm. The wagon wheel begins to spin on its own, which would help if it were not also on fire.
 health = 6
 sanity = -8
@@ -154,9 +181,11 @@ wagon = -15
 day = 1
 part = Night
 text = Something is standing at the edge of the firelight. It is wearing your good coat and holding very still.
+scene = figure
 
 [CHOICE]
 label = Offer it a seat by the fire
+action = join
 result = It sits, says nothing, and eats most of the stew. At dawn it is gone and the coat is returned, slightly improved.
 food = -12
 health = 6
@@ -164,6 +193,7 @@ sanity = 4
 
 [CHOICE]
 label = Throw a boot at it
+action = fight
 member = Pa
 result = You hit it. It collapses into a pile of what you hope are leaves, and you pull a muscle.
 health = -10
@@ -171,6 +201,7 @@ sanity = -6
 
 [CHOICE]
 label = Wake the family and leave now
+action = flee
 result = Everyone is safe. Everyone is also very tired, and the wagon takes the dark road badly.
 health = -8
 sanity = 3
@@ -178,6 +209,7 @@ wagon = -8
 
 [CHOICE]
 label = Stay perfectly still until it leaves
+action = wait
 member = Pa
 result = It leaves around dawn. You spent the whole night not blinking, which your eyes will bring up later.
 health = -10
@@ -191,15 +223,18 @@ sanity = -2
 day = 2
 part = Dawn
 text = Someone has repacked the wagon overnight. Everything is tidy and labelled. You did not do this, and neither did anyone else.
+scene = tidy_wagon
 
 [CHOICE]
 label = Thank whoever did it, out loud
+action = ask
 result = Something in the dark clears its throat politely. The wheels are, in fact, better balanced.
 sanity = -4
 wagon = 10
 
 [CHOICE]
 label = Unpack and repack everything
+action = rush
 result = It takes two hours. You find nothing wrong, which bothers you more than finding something would have.
 food = -3
 sanity = -3
@@ -207,12 +242,14 @@ wagon = 4
 
 [CHOICE]
 label = Take inventory
+action = inspect
 result = The count is correct. It is correct in a way that suggests it was counted by something that enjoys counting.
 food = 6
 sanity = -5
 
 [CHOICE]
 label = Leave it exactly as it is
+action = refuse
 result = You drive on. Everything stays in its place all day, even over rough ground, which feels like a threat.
 sanity = -2
 wagon = 6
@@ -223,21 +260,25 @@ wagon = 6
 day = 2
 part = Mid-Morning
 text = A river crossing. One sign says SHALLOW. A second sign, lower down and in smaller writing, says NOT ANYMORE.
+scene = river
 
 [CHOICE]
 label = Ford it
+action = cross
 result = The water reaches the axles and your confidence. The wagon makes it. The oxen look vindicated.
 sanity = 3
 wagon = -12
 
 [CHOICE]
 label = Pay the ferryman
+action = buy
 result = He accepts your payment and offers no change, no name, and no eye contact. The crossing is very smooth.
 food = -10
 sanity = -3
 
 [CHOICE]
 label = Build a raft
+action = build
 result = It floats for a distance you could call ambitious. Everyone gets across, damp and reconsidering their choices.
 health = -6
 sanity = 3
@@ -245,6 +286,7 @@ wagon = -4
 
 [CHOICE]
 label = Read the second sign again
+action = inspect
 result = It now says something else. You decide not to read the third sign.
 sanity = -8
 
@@ -254,9 +296,11 @@ sanity = -8
 day = 2
 part = Noon
 text = A camp of travellers waves you over for lunch. They are all smiling at the same speed.
+scene = travellers
 
 [CHOICE]
 label = Join them for lunch
+action = eat
 result = The food is excellent. They ask which of you is the youngest, purely as small talk.
 food = 15
 health = 5
@@ -264,6 +308,7 @@ sanity = -9
 
 [CHOICE]
 label = Trade supplies
+action = buy
 result = You swap spare wheel hubs for sacks of flour. They count your family twice, and then once more to be sure.
 food = 10
 sanity = -3
@@ -271,11 +316,13 @@ wagon = -6
 
 [CHOICE]
 label = Wave and keep going
+action = rush
 result = They wave until you are out of sight, and for a little while after that.
 sanity = -3
 
 [CHOICE]
 label = Ask why they smile at the same speed
+action = ask
 result = They stop. They resume. Nobody answers, but someone passes you a pie as a gesture of goodwill.
 food = 8
 sanity = -10
@@ -286,21 +333,25 @@ sanity = -10
 day = 2
 part = Evening
 text = The oxen have formed a circle and are facing inward. Nobody asked them to. It looks like a meeting.
+scene = oxen_circle
 
 [CHOICE]
 label = Interrupt them
+action = ask
 result = They disperse, offended. One of them kicks your bucket on the way out, with some precision.
 sanity = 2
 wagon = -4
 
 [CHOICE]
 label = Stand quietly at the back
+action = wait
 result = Whatever they were discussing is resolved. The oxen are calmer. You are not.
 sanity = -7
 wagon = 10
 
 [CHOICE]
 label = Offer them extra oats
+action = feed
 result = They accept the oats as an opening bid. Negotiations continue until sunset.
 food = -6
 sanity = 2
@@ -308,6 +359,7 @@ wagon = 8
 
 [CHOICE]
 label = Take notes
+action = inspect
 result = The oxen see you writing and stop. When they start again, it is in a language you can read.
 sanity = -9
 wagon = 5
@@ -318,9 +370,11 @@ wagon = 5
 day = 2
 part = Night
 text = A voice in the dark says it is lost and asks to borrow your wagon for a while. It sounds like you.
+scene = voice
 
 [CHOICE]
 label = Lend it the wagon
+action = give
 result = It returns at dawn, thanks you in your own voice, and leaves some snacks. There is also a cupholder now.
 food = 5
 sanity = -6
@@ -328,17 +382,20 @@ wagon = -6
 
 [CHOICE]
 label = Refuse politely
+action = refuse
 result = It says it understands, and that it will ask again tomorrow, with more of you.
 sanity = -6
 
 [CHOICE]
 label = Offer directions instead
+action = ask
 result = Your directions are excellent. It leaves satisfied. In the morning there are footprints all around the wagon, pointing outward.
 health = 5
 sanity = -3
 
 [CHOICE]
 label = Ask it for directions
+action = ask
 result = It knows exactly where you are going. It says it will be there first, and marks a shortcut on your map.
 sanity = -10
 wagon = 8
@@ -351,15 +408,18 @@ wagon = 8
 day = 3
 part = Dawn
 text = The trail has been repaired overnight. The new road is smooth, clearly meant for you, and goes in one direction only.
+scene = new_road
 
 [CHOICE]
 label = Follow the new road
+action = rush
 result = It is the best road you have ever travelled. It is also faintly warm, and it is not the road you were on.
 sanity = -8
 wagon = 12
 
 [CHOICE]
 label = Stay on the old trail
+action = refuse
 member = Granny
 result = The old trail is rocky and unmoved by your loyalty. The new road watches you go. Granny feels every rock.
 health = -12
@@ -368,12 +428,14 @@ wagon = -8
 
 [CHOICE]
 label = Dig up a piece of the new road
+action = build
 result = Underneath is more road. You fill the hole in, say nothing to the family, and keep the seed corn you found.
 food = 10
 sanity = -6
 
 [CHOICE]
 label = Ask the oxen which way to go
+action = ask
 result = They have been waiting for you to ask. They go left. Then each of them looks at you, one after the other.
 sanity = -4
 wagon = 6
@@ -384,9 +446,11 @@ wagon = 6
 day = 3
 part = Mid-Morning
 text = The map man is at the next roadside, selling a different map. It shows this exact spot, with a small red X on your wagon.
+scene = map_man
 
 [CHOICE]
 label = Buy the map
+action = buy
 result = The X moves when you do. According to the date on the map, it has been accurate for some time.
 food = -4
 sanity = -8
@@ -394,6 +458,7 @@ wagon = 8
 
 [CHOICE]
 label = Ask what the X means
+action = ask
 result = He says it is either treasure or a warning. He sells both versions, at different prices.
 food = -3
 sanity = -4
@@ -401,12 +466,14 @@ wagon = 4
 
 [CHOICE]
 label = Drive through his stall
+action = fight
 result = He does not seem angry. He seems relieved. His maps scatter like startled birds.
 sanity = 8
 wagon = -8
 
 [CHOICE]
 label = Buy him lunch
+action = give
 result = He eats with the focus of a man who has not eaten in some time. It is the first normal thing he has done.
 food = -8
 health = 4
@@ -418,21 +485,25 @@ sanity = 10
 day = 3
 part = Noon
 text = The deer from Day 1 is back. It has brought friends, and one of them is wearing your hat.
+scene = herd
 
 [CHOICE]
 label = Ask for your hat back
+action = ask
 result = The deer in the hat bows and returns it. Everyone agrees this went well, except possibly the hat.
 food = -4
 sanity = 6
 
 [CHOICE]
 label = Shoot the one in the hat
+action = shoot
 result = It falls over politely. The others hold a brief, dignified silence and then give you directions.
 food = 18
 sanity = -10
 
 [CHOICE]
 label = Share lunch with the herd
+action = eat
 result = They eat all of it in a neat line and leave a stack of coins larger than last time. Trade seems possible.
 food = -12
 sanity = 6
@@ -440,6 +511,7 @@ wagon = 6
 
 [CHOICE]
 label = Challenge the hat deer to a rematch
+action = fight
 member = Pa
 result = It wins again. You now have a rivalry, which is somehow better than having nothing.
 health = -18
@@ -451,9 +523,11 @@ sanity = 6
 day = 3
 part = Evening
 text = Your son has drawn a second circle, larger than the first. He says this one is for the whole family, and that it comes with snacks.
+scene = ritual
 
 [CHOICE]
 label = Join the family circle
+action = join
 result = It is warm, there are snacks, and the curse has been rebranded as a team-building exercise.
 food = 6
 health = 8
@@ -461,18 +535,21 @@ sanity = -6
 
 [CHOICE]
 label = Ask who the snacks are from
+action = ask
 result = He says they were donations. The donor is standing right behind you, and has been for a while.
 food = 10
 sanity = -12
 
 [CHOICE]
 label = Draw a better circle
+action = build
 result = Yours is neater. He studies it with respect. The curse, he explains, is now technically your problem.
 health = -4
 sanity = 6
 
 [CHOICE]
 label = Tell him he is grounded
+action = refuse
 result = It works for about nine minutes. Then the wagon is grounded too, in the sense of stuck in mud.
 sanity = 5
 wagon = -12
@@ -483,9 +560,11 @@ wagon = -12
 day = 3
 part = Night
 text = The edge of the firelight is full of figures. All of them are wearing your coat. The first one has brought a chair.
+scene = crowd
 
 [CHOICE]
 label = Offer them all a seat
+action = join
 result = They sit. They are polite, hungry, and gone by morning, leaving only a pile of coats too big to be yours.
 food = -15
 health = 8
@@ -493,6 +572,7 @@ sanity = 8
 
 [CHOICE]
 label = Hand out the coats
+action = give
 result = Each takes a coat and leaves, thoughtfully, in a different direction. You no longer own a coat.
 health = -8
 sanity = 8
@@ -500,6 +580,7 @@ wagon = 4
 
 [CHOICE]
 label = Drive through the night
+action = flee
 result = Nothing follows you. That is not reassuring. At dawn the oxen are lathered, proud, and refusing eye contact.
 health = -6
 sanity = 6
@@ -507,6 +588,7 @@ wagon = -15
 
 [CHOICE]
 label = Stare back until dawn
+action = wait
 result = At first light they are gone and you have won, on a technicality. Your eyes disagree.
 health = -10
 sanity = -4
@@ -522,15 +604,18 @@ day = 2
 part = Noon
 requires = LowFood
 text = A camp ahead is cooking something that smells wonderful. Your stomach has started negotiating on your behalf, and it is not a patient negotiator.
+scene = cook_camp
 
 [CHOICE]
 label = Beg for a bowl
+action = ask
 result = They hand you a bowl and watch you eat every spoonful. Nobody asks for payment, which is somehow worse.
 food = 18
 sanity = -6
 
 [CHOICE]
 label = Steal the whole pot
+action = steal
 result = You run. The pot is heavy, hot, and apparently theirs. Nobody chases you. They just keep smiling at the same speed.
 food = 25
 health = -5
@@ -538,6 +623,7 @@ sanity = -10
 
 [CHOICE]
 label = Offer to work for a meal
+action = build
 result = You chop wood for two hours. The stew is excellent. You owe them something, but nobody mentions what.
 food = 14
 health = -4
@@ -545,6 +631,7 @@ sanity = -3
 
 [CHOICE]
 label = Trade the spare wheel for food
+action = buy
 result = A fair deal, if you ignore the wheel. You will think about the wheel later.
 food = 20
 wagon = -10
@@ -556,21 +643,25 @@ day = 3
 part = Noon
 requires = LowFood
 text = The deer from Day 1 is back, and you are very hungry. It seems to know this, and is standing perfectly still.
+scene = deer
 
 [CHOICE]
 label = Shoot the deer, quickly
+action = shoot
 result = The deer sighs and it is over. You eat well, in silence. One of the others keeps your hat.
 food = 25
 sanity = -8
 
 [CHOICE]
 label = Ask the deer for help
+action = pray
 result = It leads you to a field of wild berries and leaves without a word, the most helpful thing a deer has ever done.
 food = 15
 sanity = 4
 
 [CHOICE]
 label = Eat the oats meant for the oxen
+action = eat
 result = The oxen watch you do it. Their silence is a statement, and the statement is a long one.
 food = 12
 sanity = -4
@@ -578,6 +669,7 @@ wagon = -8
 
 [CHOICE]
 label = Share what little you have
+action = give
 result = The herd takes the crumbs gravely and gives you a long look and a few coins. Trade is possible, but not today.
 food = -4
 sanity = 10
@@ -589,15 +681,18 @@ day = 2
 part = Mid-Morning
 requires = LowWagon
 text = A river crossing, and the wagon creaks like a bad idea. One sign says SHALLOW. The wagon has opinions about that.
+scene = river
 
 [CHOICE]
 label = Ford it anyway
+action = cross
 result = The wheels hold, then they do not. The oxen drag the wagon out of the river with the air of a profession.
 sanity = 3
 wagon = -20
 
 [CHOICE]
 label = Repair it before crossing
+action = build
 result = It takes the afternoon. The wagon accepts the repairs the way a cat accepts a bath.
 food = -6
 health = -3
@@ -605,6 +700,7 @@ wagon = 18
 
 [CHOICE]
 label = Leave half the cargo behind
+action = give
 result = The wagon floats, nearly. You never see the cargo again, but you begin to suspect it saw you.
 food = -10
 sanity = -4
@@ -612,6 +708,7 @@ wagon = 10
 
 [CHOICE]
 label = Carry everyone across by hand
+action = cross
 result = It takes six trips and a lot of language. The wagon crosses empty and arrives looking smug.
 health = -6
 sanity = 5
@@ -624,27 +721,32 @@ day = 3
 part = Dawn
 requires = LowWagon
 text = The new road is back. It is smooth, wide, and clearly meant for you. Your wagon looks at it the way a starving man looks at a pie.
+scene = new_road
 
 [CHOICE]
 label = Take the new road
+action = rush
 result = The wagon purrs. It has never run so smoothly, which is exactly what worries you.
 sanity = -10
 wagon = 20
 
 [CHOICE]
 label = Patch the wagon on the old trail
+action = build
 result = You find a bent nail and a firm opinion. The wagon holds, mostly.
 food = -4
 wagon = 10
 
 [CHOICE]
 label = Ask the oxen
+action = ask
 result = They go left, then stop, then look at the road. Even the oxen are tempted.
 sanity = -5
 wagon = 8
 
 [CHOICE]
 label = Burn the old trail markers
+action = burn
 result = A dramatic gesture that fixes nothing and warms everyone's hands.
 sanity = 6
 wagon = -4
@@ -656,15 +758,18 @@ day = 3
 part = Evening
 requires = LowHealth
 text = Your son has drawn a third circle. This one is a bed. He says the whole family looks terrible and should lie down in it.
+scene = ritual
 
 [CHOICE]
 label = Lie down in the circle
+action = sleep
 result = It is warm, and it hums. By morning everyone feels a little better and slightly more owned.
 health = 14
 sanity = -9
 
 [CHOICE]
 label = Make soup in the circle
+action = eat
 result = The circle accepts the soup. The soup accepts nothing, but it is hot.
 food = -8
 health = 10
@@ -672,12 +777,14 @@ sanity = 3
 
 [CHOICE]
 label = Forbid it
+action = refuse
 result = He sighs like a much older man. Nobody sleeps well, and everyone is vaguely ashamed.
 health = -4
 sanity = 4
 
 [CHOICE]
 label = Ask where he learned this
+action = ask
 result = From the oxen, he says. They do not deny it.
 health = 6
 sanity = -8

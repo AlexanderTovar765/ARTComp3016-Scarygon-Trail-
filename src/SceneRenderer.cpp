@@ -1,46 +1,15 @@
+#include <vector>
 #include "SceneRenderer.h"
+
+#include "DrawUtil.h"
+#include "SceneActors.h"
 
 #include <algorithm>
 #include <cmath>
 #include <string>
 
 namespace {
-    constexpr float kPi = 3.14159265f;
-
-    void setColor(SDL_Renderer* r, SDL_Color c, Uint8 alpha = 255) {
-        SDL_SetRenderDrawColor(r, c.r, c.g, c.b, alpha);
-    }
-
-    void fillRect(SDL_Renderer* r, float x, float y, float w, float h) {
-        const SDL_FRect rect{ x, y, w, h };
-        SDL_RenderFillRect(r, &rect);
-    }
-
-    void fillCircle(SDL_Renderer* r, float cx, float cy, float radius) {
-        for (float dy = -radius; dy <= radius; dy += 1.0f) {
-            const float halfWidth = std::sqrt(std::max(0.0f, radius * radius - dy * dy));
-            fillRect(r, cx - halfWidth, cy + dy, halfWidth * 2.0f, 1.0f);
-        }
-    }
-
-    void strokeCircle(SDL_Renderer* r, float cx, float cy, float radius) {
-        const int segments = 28;
-        for (int i = 0; i < segments; ++i) {
-            const float a0 = 2.0f * kPi * static_cast<float>(i) / segments;
-            const float a1 = 2.0f * kPi * static_cast<float>(i + 1) / segments;
-            SDL_RenderLine(r, cx + std::cos(a0) * radius, cy + std::sin(a0) * radius,
-                              cx + std::cos(a1) * radius, cy + std::sin(a1) * radius);
-        }
-    }
-
-    // A filled half-ellipse sitting on baseY (used for hills and the wagon's canvas cover).
-    void fillDome(SDL_Renderer* r, float cx, float baseY, float halfWidth, float height) {
-        for (float row = 0.0f; row < height; row += 1.0f) {
-            const float t = row / height;
-            const float w = halfWidth * std::sqrt(std::max(0.0f, 1.0f - t * t));
-            fillRect(r, cx - w, baseY - row, w * 2.0f, 1.0f);
-        }
-    }
+    using namespace draw;
 
     struct Palette {
         SDL_Color sky;
@@ -75,124 +44,217 @@ namespace {
         strokeCircle(r, cx, cy, radius - 1.0f);
         for (int i = 0; i < 4; ++i) {  // spokes
             const float a = angle + kPi * static_cast<float>(i) / 4.0f;
-            SDL_RenderLine(r, cx - std::cos(a) * radius, cy - std::sin(a) * radius,
+            draw::line(r, cx - std::cos(a) * radius, cy - std::sin(a) * radius,
                               cx + std::cos(a) * radius, cy + std::sin(a) * radius);
         }
         fillCircle(r, cx, cy, 2.5f);
     }
 
-    void strokeEllipse(SDL_Renderer* r, float cx, float cy, float rx, float ry) {
-        const int segments = 24;
-        for (int i = 0; i < segments; ++i) {
-            const float a0 = 2.0f * kPi * static_cast<float>(i) / segments;
-            const float a1 = 2.0f * kPi * static_cast<float>(i + 1) / segments;
-            SDL_RenderLine(r, cx + std::cos(a0) * rx, cy + std::sin(a0) * ry,
-                              cx + std::cos(a1) * rx, cy + std::sin(a1) * ry);
-        }
+}
+
+namespace {
+    struct Layout {
+        float horizon, roadY, groundY;
+    };
+
+    Layout layoutFor(const SDL_FRect& area) {
+        Layout l;
+        l.horizon = area.y + area.h * 0.62f;
+        l.roadY = l.horizon + (area.y + area.h - l.horizon) * 0.45f;
+        l.groundY = l.roadY + (area.y + area.h - l.roadY) * 0.40f;
+        return l;
     }
 
-    // An ox seen from the side. It is looking straight at you. It always is.
-    void drawOx(SDL_Renderer* r, float x, float groundY, float legPhase) {
-        setColor(r, kOxHide);
-        fillRect(r, x, groundY - 44.0f, 58.0f, 26.0f);          // body
-        fillRect(r, x + 54.0f, groundY - 52.0f, 20.0f, 18.0f);  // head
-        const float stepA = std::sin(legPhase) * 2.0f;
-        const float stepB = -stepA;
-        fillRect(r, x + 4.0f,  groundY - 20.0f + stepA, 6.0f, 20.0f - stepA);   // legs
-        fillRect(r, x + 18.0f, groundY - 20.0f + stepB, 6.0f, 20.0f - stepB);
-        fillRect(r, x + 36.0f, groundY - 20.0f + stepA, 6.0f, 20.0f - stepA);
-        fillRect(r, x + 48.0f, groundY - 20.0f + stepB, 6.0f, 20.0f - stepB);
-        setColor(r, kOutline);
-        SDL_RenderLine(r, x + 58.0f, groundY - 52.0f, x + 54.0f, groundY - 62.0f);  // horns
-        SDL_RenderLine(r, x + 72.0f, groundY - 52.0f, x + 76.0f, groundY - 62.0f);
-        SDL_SetRenderDrawColor(r, 245, 245, 245, 255);
-        fillRect(r, x + 58.0f, groundY - 48.0f, 5.0f, 5.0f);   // eyes
-        fillRect(r, x + 66.0f, groundY - 48.0f, 5.0f, 5.0f);
-        setColor(r, kOutline);
-        fillRect(r, x + 60.0f, groundY - 46.0f, 2.0f, 2.0f);   // pupils, fixed on the viewer
-        fillRect(r, x + 66.0f, groundY - 46.0f, 2.0f, 2.0f);
+    // Sky, stars, sun or moon, hills, ground and road.
+    void drawBackdrop(SDL_Renderer* r, const SDL_FRect& area, TimePart part, const Layout& l) {
+        const int index = static_cast<int>(part);
+        const Palette& palette = kPalettes[index];
+
+        setColor(r, palette.sky);
+        fillRect(r, area.x, area.y, area.w, area.h);
+
+        if (part == TimePart::Night) {   // stars
+            SDL_SetRenderDrawColor(r, 235, 235, 255, 255);
+            static const float stars[][2] = {
+                {0.06f,0.10f},{0.15f,0.30f},{0.24f,0.08f},{0.33f,0.22f},{0.41f,0.12f},{0.50f,0.30f},
+                {0.58f,0.07f},{0.66f,0.24f},{0.83f,0.09f},{0.91f,0.27f},{0.96f,0.12f},{0.45f,0.38f} };
+            for (const auto& s : stars) fillRect(r, area.x + s[0] * area.w, area.y + s[1] * area.h, 2.0f, 2.0f);
+        }
+
+        const float bodyX = area.x + kSkyBodies[index].x * area.w;
+        const float bodyY = area.y + kSkyBodies[index].y * area.h;
+        if (part == TimePart::Night) {
+            SDL_SetRenderDrawColor(r, 232, 232, 214, 255);
+            fillCircle(r, bodyX, bodyY, 17.0f);
+            setColor(r, palette.sky);
+            fillCircle(r, bodyX + 8.0f, bodyY - 4.0f, 15.0f);  // bite out of it: a crescent
+        } else {
+            SDL_SetRenderDrawColor(r, 255, 232, 140, 255);
+            fillCircle(r, bodyX, bodyY, 21.0f);
+        }
+
+        setColor(r, palette.hills);
+        fillDome(r, area.x + area.w * 0.22f, l.horizon, 120.0f, 46.0f);
+        fillDome(r, area.x + area.w * 0.70f, l.horizon, 150.0f, 58.0f);
+        setColor(r, palette.ground);
+        fillRect(r, area.x, l.horizon, area.w, area.y + area.h - l.horizon);
+        setColor(r, palette.road);
+        fillRect(r, area.x, l.roadY, area.w, (area.y + area.h - l.roadY) * 0.55f);
     }
+
+    // The covered wagon. 'rolling' makes it bob and its wheels turn; parked wagons sit still.
+    void drawWagon(SDL_Renderer* r, float wagonX, const Layout& l, float seconds, bool rolling) {
+        const float bob = rolling ? std::sin(seconds * 6.0f) * 1.5f : 0.0f;
+        const float angle = rolling ? seconds * 3.0f : 0.0f;
+        const float wagonBottom = l.groundY - 14.0f + bob;
+        setColor(r, kWagonWood);
+        fillRect(r, wagonX, wagonBottom - 34.0f, 96.0f, 30.0f);                  // body
+        setColor(r, kCanvas);
+        fillDome(r, wagonX + 48.0f, wagonBottom - 34.0f, 48.0f, 36.0f);          // canvas cover
+        setColor(r, kOutline);
+        fillRect(r, wagonX + 96.0f, wagonBottom - 24.0f, 22.0f, 3.0f);           // hitch pole
+        drawWheel(r, wagonX + 22.0f, l.groundY - 2.0f + bob, 16.0f, angle);
+        drawWheel(r, wagonX + 76.0f, l.groundY - 2.0f + bob, 16.0f, angle);
+    }
+
+    // Dread tints everything red as sanity drops.
+    void drawDread(SDL_Renderer* r, const SDL_FRect& area, float dread) {
+        if (dread <= 0.0f) return;
+        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+        SDL_SetRenderDrawColor(r, 130, 0, 25, static_cast<Uint8>(std::min(1.0f, dread) * 85.0f));
+        fillRect(r, area.x, area.y, area.w, area.h);
+        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
+    }
+}
+
+void SceneRenderer::releaseResources() {
+    if (m_pixelTexture) SDL_DestroyTexture(m_pixelTexture);
+    m_pixelTexture = nullptr;
+    m_pixelW = m_pixelH = 0;
+}
+
+bool SceneRenderer::beginPixelPass(SDL_Renderer* r) const {
+    int outW = 0, outH = 0;
+    if (!SDL_GetRenderOutputSize(r, &outW, &outH) || outW <= 0 || outH <= 0) return false;
+    const int w = (outW + kPixelSize - 1) / kPixelSize;
+    const int h = (outH + kPixelSize - 1) / kPixelSize;
+    if (!m_pixelTexture || w != m_pixelW || h != m_pixelH) {
+        if (m_pixelTexture) SDL_DestroyTexture(m_pixelTexture);
+        m_pixelTexture = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
+        m_pixelW = w; m_pixelH = h;
+        if (!m_pixelTexture) return false;   // fall back to smooth drawing
+        SDL_SetTextureScaleMode(m_pixelTexture, SDL_SCALEMODE_NEAREST);
+        SDL_SetTextureBlendMode(m_pixelTexture, SDL_BLENDMODE_BLEND);
+    }
+    SDL_GetRenderScale(r, &m_savedScaleX, &m_savedScaleY);   // (each render target keeps its own scale)
+    if (!SDL_SetRenderTarget(r, m_pixelTexture)) return false;
+    SDL_SetRenderScale(r, 1.0f / kPixelSize, 1.0f / kPixelSize);
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
+    SDL_SetRenderDrawColor(r, 0, 0, 0, 0);
+    SDL_RenderClear(r);
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
+    m_inPass = true;
+    draw::pixelStep() = static_cast<float>(kPixelSize);
+    return true;
+}
+
+void SceneRenderer::endPixelPass(SDL_Renderer* r, const SDL_FRect& area) const {
+    if (!m_inPass) return;
+    m_inPass = false;
+    draw::pixelStep() = 1.0f;
+    SDL_SetRenderClipRect(r, nullptr);
+    SDL_SetRenderTarget(r, nullptr);
+    SDL_SetRenderScale(r, m_savedScaleX, m_savedScaleY);
+    const float k = static_cast<float>(kPixelSize);
+    const SDL_FRect src{ area.x / k, area.y / k, area.w / k, area.h / k };
+    SDL_RenderTexture(r, m_pixelTexture, &src, &area);
 }
 
 void SceneRenderer::drawScene(SDL_Renderer* r, const SDL_FRect& area, TimePart part,
                               Uint64 timeMs, float dread, float travel) const {
-    const int index = static_cast<int>(part);
-    const Palette& palette = kPalettes[index];
-    const float horizon = area.y + area.h * 0.62f;
+    const Layout l = layoutFor(area);
     const float seconds = static_cast<float>(timeMs) / 1000.0f;
+    beginPixelPass(r);
 
     // Keep everything (the hills especially) inside the frame.
     const SDL_Rect clip{ static_cast<int>(area.x), static_cast<int>(area.y),
                          static_cast<int>(area.w), static_cast<int>(area.h) };
     SDL_SetRenderClipRect(r, &clip);
 
-    // Sky
-    setColor(r, palette.sky);
-    fillRect(r, area.x, area.y, area.w, area.h);
+    drawBackdrop(r, area, part, l);
 
-    // Stars at night
-    if (part == TimePart::Night) {
-        SDL_SetRenderDrawColor(r, 235, 235, 255, 255);
-        static const float stars[][2] = {
-            {0.06f,0.10f},{0.15f,0.30f},{0.24f,0.08f},{0.33f,0.22f},{0.41f,0.12f},{0.50f,0.30f},
-            {0.58f,0.07f},{0.66f,0.24f},{0.83f,0.09f},{0.91f,0.27f},{0.96f,0.12f},{0.45f,0.38f} };
-        for (const auto& s : stars) fillRect(r, area.x + s[0] * area.w, area.y + s[1] * area.h, 2.0f, 2.0f);
-    }
-
-    // Sun or moon
-    const float bodyX = area.x + kSkyBodies[index].x * area.w;
-    const float bodyY = area.y + kSkyBodies[index].y * area.h;
-    if (part == TimePart::Night) {
-        SDL_SetRenderDrawColor(r, 232, 232, 214, 255);
-        fillCircle(r, bodyX, bodyY, 17.0f);
-        setColor(r, palette.sky);
-        fillCircle(r, bodyX + 8.0f, bodyY - 4.0f, 15.0f);  // bite out of it: a crescent
-    } else {
-        SDL_SetRenderDrawColor(r, 255, 232, 140, 255);
-        fillCircle(r, bodyX, bodyY, 21.0f);
-    }
-
-    // Hills, ground, road
-    setColor(r, palette.hills);
-    fillDome(r, area.x + area.w * 0.22f, horizon, 120.0f, 46.0f);
-    fillDome(r, area.x + area.w * 0.70f, horizon, 150.0f, 58.0f);
-    setColor(r, palette.ground);
-    fillRect(r, area.x, horizon, area.w, area.y + area.h - horizon);
-    const float roadY = horizon + (area.y + area.h - horizon) * 0.45f;
-    setColor(r, palette.road);
-    fillRect(r, area.x, roadY, area.w, (area.y + area.h - roadY) * 0.55f);
-
-    // Wagon (bobs gently, wheels roll)
-    const float groundY = roadY + (area.y + area.h - roadY) * 0.40f;
-    const float bob = std::sin(seconds * 6.0f) * 1.5f;
+    // The wagon bobs gently and its wheels roll. On the title screen it drives across and off the edge.
     const float wagonX = travel >= 0.0f
-        ? area.x - 290.0f + (area.w + 290.0f) * std::min(1.0f, travel)   // drives across and off the edge
+        ? area.x - 290.0f + (area.w + 290.0f) * std::min(1.0f, travel)
         : area.x + area.w * 0.12f;
-    const float wagonBottom = groundY - 14.0f + bob;
-
-    setColor(r, kWagonWood);
-    fillRect(r, wagonX, wagonBottom - 34.0f, 96.0f, 30.0f);                  // body
-    setColor(r, kCanvas);
-    fillDome(r, wagonX + 48.0f, wagonBottom - 34.0f, 48.0f, 36.0f);          // canvas cover
-    setColor(r, kOutline);
-    fillRect(r, wagonX + 96.0f, wagonBottom - 24.0f, 22.0f, 3.0f);           // hitch pole
-    drawWheel(r, wagonX + 22.0f, groundY - 2.0f + bob, 16.0f, seconds * 3.0f);
-    drawWheel(r, wagonX + 76.0f, groundY - 2.0f + bob, 16.0f, seconds * 3.0f);
+    drawWagon(r, wagonX, l, seconds, true);
 
     // Two oxen, watching
+    StageContext c;
+    c.r = r;
     const float stride = seconds * 6.0f;
-    drawOx(r, wagonX + 112.0f, groundY + 2.0f, stride);
-    drawOx(r, wagonX + 196.0f, groundY + 2.0f, stride + kPi);
+    stage::drawOx(c, wagonX + 112.0f, l.groundY + 2.0f, stride);
+    stage::drawOx(c, wagonX + 196.0f, l.groundY + 2.0f, stride + kPi);
 
-    // Dread tints everything red as sanity drops
-    if (dread > 0.0f) {
-        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawColor(r, 130, 0, 25, static_cast<Uint8>(std::min(1.0f, dread) * 85.0f));
-        fillRect(r, area.x, area.y, area.w, area.h);
-        SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
-    }
+    drawDread(r, area, dread);
 
     SDL_SetRenderClipRect(r, nullptr);
+    endPixelPass(r, area);
+    setColor(r, kOutline);
+    SDL_RenderRect(r, &area);
+}
+
+void SceneRenderer::drawStage(SDL_Renderer* r, const TextRenderer& text, const SDL_FRect& area, TimePart part,
+                              Uint64 timeMs, float dread, const Stage& stage) const {
+    const Layout l = layoutFor(area);
+    const float seconds = static_cast<float>(timeMs) / 1000.0f;
+    beginPixelPass(r);
+
+    const SDL_Rect clip{ static_cast<int>(area.x), static_cast<int>(area.y),
+                         static_cast<int>(area.w), static_cast<int>(area.h) };
+    SDL_SetRenderClipRect(r, &clip);
+
+    drawBackdrop(r, area, part, l);
+
+    StageContext c;
+    c.r = r;
+    c.text = &text;
+    c.area = area;
+    c.t = seconds;
+    c.horizon = l.horizon;
+    c.roadY = l.roadY;
+    c.groundY = l.groundY;
+    c.wagonX = area.x + area.w * 0.04f;
+    c.part = part;
+    std::vector<DeferredText> labels;
+    if (m_inPass) c.deferred = &labels;
+
+    // The wagon waits at the left while whatever is happening happens on the right.
+    drawWagon(r, c.wagonX, l, seconds, false);
+
+    if (stage.scene == SceneId::Trail) {   // no particular scene: the oxen plod about
+        stage::drawOx(c, c.zoneX(0.55f), l.groundY + 2.0f, seconds * 6.0f);
+        stage::drawOx(c, c.zoneX(0.55f) + 88.0f, l.groundY + 2.0f, seconds * 6.0f + kPi);
+    } else {
+        stage::drawSceneActor(c, stage.scene);
+    }
+    stage::drawAction(c, stage.action, stage.actionSeconds);
+    if (stage.action != ActionId::None) stage::drawOutcomeBadge(c, stage.outcome, stage.actionSeconds);
+
+    drawDread(r, area, dread);
+
+    SDL_SetRenderClipRect(r, nullptr);
+    endPixelPass(r, area);
+    if (!labels.empty()) {
+        const SDL_Rect textClip{ static_cast<int>(area.x), static_cast<int>(area.y),
+                                 static_cast<int>(area.w), static_cast<int>(area.h) };
+        SDL_SetRenderClipRect(r, &textClip);
+        for (const DeferredText& d : labels) {
+            SDL_SetRenderDrawColor(r, d.color.r, d.color.g, d.color.b, d.color.a);
+            text.drawLine(r, d.text, d.x, d.y, d.scale);
+        }
+        SDL_SetRenderClipRect(r, nullptr);
+    }
     setColor(r, kOutline);
     SDL_RenderRect(r, &area);
 }
@@ -236,9 +298,9 @@ void SceneRenderer::drawPortrait(SDL_Renderer* r, const SDL_FRect& area, int mem
     case 2:  // Junior: messy hair
         SDL_SetRenderDrawColor(r, 120, 72, 40, 255);
         fillDome(r, cx, cy - 4.0f, radius, 14.0f);
-        SDL_RenderLine(r, cx - 9.0f, cy - radius + 2.0f, cx - 13.0f, cy - radius - 5.0f);
-        SDL_RenderLine(r, cx,        cy - radius,        cx + 1.0f,  cy - radius - 7.0f);
-        SDL_RenderLine(r, cx + 9.0f, cy - radius + 2.0f, cx + 13.0f, cy - radius - 5.0f);
+        draw::line(r, cx - 9.0f, cy - radius + 2.0f, cx - 13.0f, cy - radius - 5.0f);
+        draw::line(r, cx,        cy - radius,        cx + 1.0f,  cy - radius - 7.0f);
+        draw::line(r, cx + 9.0f, cy - radius + 2.0f, cx + 13.0f, cy - radius - 5.0f);
         break;
     default:  // Granny: white hair, bun and glasses
         SDL_SetRenderDrawColor(r, 238, 238, 238, 255);
@@ -252,8 +314,8 @@ void SceneRenderer::drawPortrait(SDL_Renderer* r, const SDL_FRect& area, int mem
     if (dead) {
         for (int side = -1; side <= 1; side += 2) {              // crossed-out eyes
             const float ex = cx + static_cast<float>(side) * 6.0f;
-            SDL_RenderLine(r, ex - 3.0f, cy - 5.0f, ex + 3.0f, cy + 1.0f);
-            SDL_RenderLine(r, ex - 3.0f, cy + 1.0f, ex + 3.0f, cy - 5.0f);
+            draw::line(r, ex - 3.0f, cy - 5.0f, ex + 3.0f, cy + 1.0f);
+            draw::line(r, ex - 3.0f, cy + 1.0f, ex + 3.0f, cy - 5.0f);
         }
         fillRect(r, cx - 5.0f, cy + 8.0f, 10.0f, 2.0f);          // flat mouth
     } else {

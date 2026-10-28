@@ -113,6 +113,11 @@
     <ClCompile Include="src\Settings.cpp" />
     <ClCompile Include="src\PlaytestLog.cpp" />
     <ClCompile Include="src\AudioManager.cpp" />
+    <ClCompile Include="src\LieTracker.cpp" />
+    <ClCompile Include="src\Difficulty.cpp" />
+    <ClCompile Include="src\Animations.cpp" />
+    <ClCompile Include="src\Progress.cpp" />
+    <ClCompile Include="src\SceneActors.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Game.h" />
@@ -134,6 +139,12 @@
     <ClInclude Include="src\Settings.h" />
     <ClInclude Include="src\PlaytestLog.h" />
     <ClInclude Include="src\AudioManager.h" />
+    <ClInclude Include="src\LieTracker.h" />
+    <ClInclude Include="src\Difficulty.h" />
+    <ClInclude Include="src\Animations.h" />
+    <ClInclude Include="src\Progress.h" />
+    <ClInclude Include="src\SceneActors.h" />
+    <ClInclude Include="src\DrawUtil.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

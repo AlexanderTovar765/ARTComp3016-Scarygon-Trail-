@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 
+#include "Difficulty.h"
 #include "Effects.h"
 #include "PartyMember.h"
 #include "PartyObserver.h"
@@ -18,15 +19,10 @@
 class Party {
 public:
     static constexpr int kMaxStat          = 100;
-    static constexpr int kStartFood        = 60;
+    static constexpr int kGriefSanity      = 8;   // sanity lost per member who dies (the same on every difficulty)
 
-    // The trail's toll, taken after every event (one part of the day):
-    static constexpr int kFoodPerPart      = 3;   // for a full party; fewer mouths eat less
-    static constexpr int kSanityPerPart    = 4;   // the trail wears on everyone
-    static constexpr int kWagonPerPart     = 2;   // wear and tear
-    static constexpr int kHardshipPerPart  = 3;   // health every living member loses (frail members lose more)
-    static constexpr int kStarvationDamage = 10;  // health lost per living member while food is 0
-    static constexpr int kGriefSanity      = 8;   // sanity lost per member who dies
+    // The trail's toll (food, sanity, wagon wear, hardship, starvation) and how much choices help
+    // or hurt come from the difficulty's rules: see Difficulty.cpp.
 
     Party();
 
@@ -35,7 +31,17 @@ public:
     Party(const Party& other);
     Party& operator=(const Party& other);  // silent: copies stats, keeps this party's observers
 
-    void reset();
+    void reset();   // a fresh family; keeps the current difficulty
+
+    // Difficulty: Easy / Normal / Hard change the numbers only. Call before reset() to start a
+    // journey on that difficulty.
+    void setDifficulty(Difficulty difficulty) { m_difficulty = difficulty; }
+    Difficulty difficulty() const             { return m_difficulty; }
+    const DifficultyRules& rules() const      { return rulesFor(m_difficulty); }
+
+    // A choice's effects as they really land on this difficulty (harm and help are scaled, never
+    // down to zero). The game applies and shows THESE, so the bracketed summary stays true.
+    Effects adjusted(const Effects& effects) const;
 
     // Applies a Choice's effects, keeping every stat within 0..kMaxStat.
     void apply(const Effects& effects);
@@ -75,7 +81,8 @@ private:
     int  foodToll() const;
     static int clampStat(int value);
 
-    int m_food   = kStartFood;
+    Difficulty m_difficulty = Difficulty::Normal;
+    int m_food   = 60;
     int m_sanity = kMaxStat;
     int m_wagon  = kMaxStat;
     std::vector<PartyMember> m_members;

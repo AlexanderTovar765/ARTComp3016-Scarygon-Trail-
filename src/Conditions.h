@@ -3,12 +3,12 @@
 #include <cstdint>
 #include <string>
 
-// This part of the code is for the situations that unlock a "desperate" version of an existing event.
+// Situations that unlock a "desperate" version of an event (see ThresholdWatcher).
 enum class Condition { LowFood = 0, LowWagon, LowHealth };
 
 constexpr int kConditionCount = 3;
 
-// This part of the code is for a small set of conditions that are currently true.
+// A small set of conditions that are currently true.
 class ConditionSet {
 public:
     void set(Condition c, bool on = true) {
@@ -39,7 +39,7 @@ namespace detail {
     }
 }
 
-// This part of the code is for therReads a condition name from a data file (makes it so "LowFood", "low food" and "LOWFOOD" all work).
+// Reads a condition name from the data file ("LowFood", "low food" and "LOWFOOD" all work).
 inline bool parseCondition(const std::string& text, Condition& out) {
     const std::string wanted = detail::lettersOnly(text);
     for (int i = 0; i < kConditionCount; ++i) {

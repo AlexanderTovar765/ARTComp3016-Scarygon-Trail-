@@ -2,15 +2,18 @@
 #include <SDL3/SDL.h>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "AudioManager.h"
 #include "Button.h"
+#include "LieTracker.h"
 #include "MemberWatcher.h"
 #include "NarrativeState.h"
 #include "Party.h"
 #include "PlaytestLog.h"
+#include "Progress.h"
 #include "SceneRenderer.h"
 #include "Settings.h"
 #include "TextRenderer.h"
@@ -32,6 +35,7 @@ private:
         Instructions, // how to play
         Event,        // an event with up to 4 choices
         Result,       // what your choice did, with a Continue button
+        NarratorShift,// the narrator's state just changed: a screen that says so
         DaySummary,   // end-of-day recap
         Ending        // death, end of content, or a load error
     };
@@ -41,12 +45,18 @@ private:
     void renderTop();
     void renderHud();
     void renderTitleArt();
+    void drawNarratorMeter();
+    void drawNarratorBanner();
+    void drawEndingPlaque();
+    void drawDifficultyTag(float x);
     void renderBottom();
     void render();
     void shutdown();
 
     // Game flow
     void showTitle();
+    void cycleDifficulty();
+    void saveProgress();
     void showInstructions();
     void startGame();
     void showCurrentEvent();
@@ -54,13 +64,15 @@ private:
     void showEnding(const std::string& text, bool canRestart, bool withSummary = true);
     void onEventChoice(std::size_t index);
     void onResultContinue();
+    void proceedAfterResult();
+    void showNarratorShift();
+    void onNarratorShiftContinue();
     void onDaySummaryContinue();
     void selectChoice(std::size_t index);
     std::string journeySummary() const;
 
     // Sanity -> how trustworthy the game is (State pattern, see NarrativeState.h)
     void setNarrator(NarrativeKind kind);
-    void updateNarrator();
     static Mood moodFor(NarrativeKind kind);
 
     // Bottom panel
@@ -100,7 +112,14 @@ private:
 
     std::unique_ptr<NarrativeState> m_narrator;    // current state: Stable / Unreliable / Breakdown
     unsigned            m_screenSeed = 0;          // changes per screen, constant within one
-    std::string         m_pendingNotice;           // one-off line when the narrator state changes
+    std::optional<NarrativeKind> m_shiftTo;        // set when sanity crossed a threshold: the narrator changes after this result
+    Progress            m_progress;                // endings, scenes and animations discovered; last difficulty
+    SceneRenderer::Stage m_stage;                  // which scene and reaction the top picture shows
+    Uint64              m_stageStartMs = 0;        // when the result (and its reaction animation) appeared
+    int                 m_newDiscoveries = 0;      // new scenes/animations found this journey
+    std::optional<EndingId> m_ending;              // how this journey ended (set on the Ending screen)
+    bool                m_endingIsNew = false;
+    LieTracker          m_lies;                    // how often the narrator misled the player (revealed at the end of each day)
 
     std::string         m_narrative;               // text shown in the bottom panel
     std::vector<Button> m_buttons;

@@ -30,3 +30,6 @@ Thumbs.db
 /vendored/irrKlang/
 # Optional anonymous playtest logs written by the game at runtime
 /playtest_logs/
+# Remembered progress written by the game at runtime
+/save/
+/shots/

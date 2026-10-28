@@ -49,7 +49,7 @@ namespace {
         std::size_t best = 0;
         int bestScore = 0;
         for (std::size_t i = 0; i < choices.size(); ++i) {
-            const Effects& e = choices[i].getEffects();
+            const Effects e = party.adjusted(choices[i].getEffects());
             int score = 0;
             if (strategy == Strategy::Greedy) {
                 score = total(e);
@@ -83,10 +83,12 @@ namespace {
         std::map<std::string, int> variantRuns;    // desperate variant (by condition) -> runs that saw it
     };
 
-    void playOne(const Trail& original, Strategy strategy, std::mt19937& rng, Results& out) {
+    void playOne(const Trail& original, Strategy strategy, Difficulty difficulty, std::mt19937& rng, Results& out) {
         Trail trail = original;
         trail.reset();
         Party party;
+        party.setDifficulty(difficulty);
+        party.reset();
         ThresholdWatcher watcher;                   // the same observer the game uses
         party.addObserver(&watcher);
         bool starved = false, sawUnreliable = false, sawBreakdown = false, sawDesperate = false;
@@ -111,7 +113,7 @@ namespace {
                 if (kind == NarrativeKind::Unreliable) { ++out.partsUnreliable; sawUnreliable = true; }
                 if (kind == NarrativeKind::Breakdown)  { ++out.partsBreakdown;  sawBreakdown = true; }
 
-                party.apply(event->getChoices()[pick(strategy, *event, party, rng)].getEffects());
+                party.apply(party.adjusted(event->getChoices()[pick(strategy, *event, party, rng)].getEffects()));
                 party.advanceTime();
                 if (party.getFood() == 0) starved = true;
 
@@ -159,11 +161,20 @@ int main(int argc, char** argv) {
 
     std::cout << "# Balance report\n\n"
               << "Source: `" << path << "` (" << trail.eventCount() << " events, " << trail.lastDay()
-              << " days, including desperate variants). " << runs << " simulated runs per strategy, fixed random seed.\n\n"
-              << "Start: Food " << Party::kStartFood << ", other stats " << Party::kMaxStat
-              << ". Each part: the party eats " << Party::kFoodPerPart << " food; at 0 food it loses "
-              << Party::kStarvationDamage << " health. Health, Sanity or Wagon at 0 ends the run.\n\n";
+              << " days, including desperate variants). " << runs << " simulated runs per strategy and difficulty, fixed random seed.\n\n"
+              << "Health, Sanity or Wagon at 0 ends a run. The difficulties differ only in these rules (see `src/Difficulty.cpp`):\n\n"
+              << "| Difficulty | Start food | Food eaten per part | Sanity lost per part | Wagon lost per part | Hardship (health) per part | Starvation damage | Harm from choices | Help from choices |\n"
+              << "|---|---|---|---|---|---|---|---|---|\n";
+    for (Difficulty d : { Difficulty::Easy, Difficulty::Normal, Difficulty::Hard }) {
+        const DifficultyRules& r = rulesFor(d);
+        std::cout << "| " << difficultyName(d) << " | " << r.startFood << " | " << r.foodPerPart << " | " << r.sanityPerPart
+                  << " | " << r.wagonPerPart << " | " << r.hardshipPerPart << " | " << r.starvationDamage
+                  << " | " << r.harmPercent << "% | " << r.helpPercent << "% |\n";
+    }
+    std::cout << "\n";
 
+    for (Difficulty difficulty : { Difficulty::Easy, Difficulty::Normal, Difficulty::Hard }) {
+    std::cout << "# " << difficultyName(difficulty) << "\n\n";
     std::cout << "## Survival by strategy\n\n"
               << "| Strategy | Survives all days | Starved at some point | Reached Unreliable | Reached Breakdown | Saw a desperate event | Avg family lost |\n"
               << "|---|---|---|---|---|---|---|\n";
@@ -172,7 +183,7 @@ int main(int argc, char** argv) {
     for (Strategy s : { Strategy::Random, Strategy::Greedy, Strategy::Cautious, Strategy::Reckless }) {
         std::mt19937 rng(12345);
         Results r;
-        for (int i = 0; i < runs; ++i) playOne(trail, s, rng, r);
+        for (int i = 0; i < runs; ++i) playOne(trail, s, difficulty, rng, r);
         all.emplace_back(s, r);
         std::cout << "| " << strategyName(s) << " | " << pct(r.survived, r.runs) << " | "
                   << pct(r.starvedRuns, r.runs) << " | " << pct(r.ranIntoUnreliable, r.runs) << " | "
@@ -185,7 +196,7 @@ int main(int argc, char** argv) {
         const Results& r = entry.second;
         if (s != Strategy::Random && s != Strategy::Cautious) continue;
 
-        std::cout << "\n## " << strategyName(s) << "\n\n";
+        std::cout << "\n### " << strategyName(s) << "\n\n";
         std::cout << "Time spent in each narrator state: Stable " << pct(r.partsStable, r.partsPlayed)
                   << ", Unreliable " << pct(r.partsUnreliable, r.partsPlayed)
                   << ", Breakdown " << pct(r.partsBreakdown, r.partsPlayed) << ".\n\n";
@@ -209,6 +220,7 @@ int main(int argc, char** argv) {
         for (std::size_t day = 1; day < r.deathDay.size(); ++day) {
             std::cout << "- died on Day " << day << ": " << pct(r.deathDay[day], r.runs) << " of all runs\n";
         }
+    }
     }
 
     std::cout << "\n## Notes and limits\n\n"

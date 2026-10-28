@@ -1,16 +1,18 @@
 #include "Party.h"
 #include <algorithm>
+#include <cstdlib>
 
 Party::Party() {
     reset();
 }
 
 Party::Party(const Party& other)
-    : m_food(other.m_food), m_sanity(other.m_sanity), m_wagon(other.m_wagon),
-      m_members(other.m_members) {}  // observers are deliberately not copied
+    : m_difficulty(other.m_difficulty), m_food(other.m_food), m_sanity(other.m_sanity),
+      m_wagon(other.m_wagon), m_members(other.m_members) {}  // observers are deliberately not copied
 
 Party& Party::operator=(const Party& other) {
     if (this != &other) {
+        m_difficulty = other.m_difficulty;
         m_food = other.m_food;
         m_sanity = other.m_sanity;
         m_wagon = other.m_wagon;
@@ -22,7 +24,7 @@ Party& Party::operator=(const Party& other) {
 void Party::reset() {
     const Snapshot before = snapshot();
 
-    m_food   = kStartFood;
+    m_food   = rules().startFood;
     m_sanity = kMaxStat;
     m_wagon  = kMaxStat;
     m_members.clear();
@@ -56,7 +58,7 @@ int Party::foodToll() const {
     // Fewer mouths eat less, but never less than 1 each: 4 alive -> 3, 3 -> 3, 2 -> 2, 1 -> 1.
     const int size = static_cast<int>(m_members.size());
     if (size == 0) return 0;
-    return (kFoodPerPart * aliveCount() + size - 1) / size;
+    return (rules().foodPerPart * aliveCount() + size - 1) / size;
 }
 
 void Party::changeMemberHealth(int delta, const std::string& memberName) {
@@ -83,6 +85,27 @@ void Party::applyGrief(const Snapshot& before) {
     if (newlyDead > 0) m_sanity = clampStat(m_sanity - newlyDead * kGriefSanity);
 }
 
+namespace {
+    // Scales one effect by a percentage, rounding to the nearest whole number but never letting a
+    // non-zero effect vanish (a -1 stays at least -1).
+    int scaleEffect(int value, int percent) {
+        if (value == 0) return 0;
+        const int magnitude = std::max(1, (std::abs(value) * percent + 50) / 100);
+        return value < 0 ? -magnitude : magnitude;
+    }
+}
+
+Effects Party::adjusted(const Effects& effects) const {
+    Effects out = effects;   // keeps the 'member' target
+    const DifficultyRules& r = rules();
+    auto scale = [&](int value) { return scaleEffect(value, value < 0 ? r.harmPercent : r.helpPercent); };
+    out.food   = scale(effects.food);
+    out.health = scale(effects.health);
+    out.sanity = scale(effects.sanity);
+    out.wagon  = scale(effects.wagon);
+    return out;
+}
+
 void Party::apply(const Effects& effects) {
     const Snapshot before = snapshot();
 
@@ -99,11 +122,11 @@ Effects Party::advanceTime() {
     const Snapshot before = snapshot();
 
     m_food   = clampStat(m_food   - foodToll());
-    m_sanity = clampStat(m_sanity - kSanityPerPart);
-    m_wagon  = clampStat(m_wagon  - kWagonPerPart);
-    for (PartyMember& member : m_members) member.changeHealth(-kHardshipPerPart);  // the trail is hard on everyone
+    m_sanity = clampStat(m_sanity - rules().sanityPerPart);
+    m_wagon  = clampStat(m_wagon  - rules().wagonPerPart);
+    for (PartyMember& member : m_members) member.changeHealth(-rules().hardshipPerPart);  // the trail is hard on everyone
     if (m_food == 0) {
-        for (PartyMember& member : m_members) member.changeHealth(-kStarvationDamage);
+        for (PartyMember& member : m_members) member.changeHealth(-rules().starvationDamage);
     }
     applyGrief(before);
 

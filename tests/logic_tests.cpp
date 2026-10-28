@@ -14,12 +14,16 @@
 #include <string>
 #include <vector>
 
+#include "Animations.h"
 #include "AudioManager.h"
+#include "Difficulty.h"
 #include "Effects.h"
+#include "LieTracker.h"
 #include "MemberWatcher.h"
 #include "NarrativeState.h"
 #include "Party.h"
 #include "PlaytestLog.h"
+#include "Progress.h"
 #include "Settings.h"
 #include "TextRenderer.h"
 #include "ThresholdWatcher.h"
@@ -139,7 +143,7 @@ static void testPartyRules() {
     const int healthBefore = hungry.getHealth();
     hungry.advanceTime();                                // eats 2 -> 0 food -> starving
     CHECK(hungry.getFood() == 0);
-    CHECK(healthBefore - hungry.getHealth() > Party::kHardshipPerPart);   // more than hardship alone
+    CHECK(healthBefore - hungry.getHealth() > hungry.rules().hardshipPerPart);   // more than hardship alone
     const int again = hungry.getHealth();
     hungry.advanceTime();
     CHECK(hungry.getFood() == 0 && hungry.getHealth() < again);
@@ -292,6 +296,104 @@ static void testNarrator() {
 }
 
 // ---------------------------------------------------------------------------
+
+static void testLieTracker() {
+    begin("T24 LieTracker finds swapped words and added asides");
+    LieTracker::TextLie lie;
+    CHECK(!LieTracker::findTextLie("The wagon crosses the river.", "The wagon crosses the river.", lie));
+    CHECK(!LieTracker::findTextLie("", "", lie));
+    CHECK(LieTracker::findTextLie("The wagon crosses the river.", "The hearse crosses the river.", lie));
+    CHECK(!lie.isAside && lie.truth == "wagon" && lie.shown == "hearse");
+    CHECK(LieTracker::findTextLie("Your wagon, again.", "Your hearse, again.", lie));      // punctuation is ignored
+    CHECK(lie.truth == "wagon" && lie.shown == "hearse");
+    CHECK(LieTracker::findTextLie("Wagon first.", "Hearse first.", lie));                  // capitals are fine
+    CHECK(lie.truth == "Wagon" && lie.shown == "Hearse");
+    CHECK(LieTracker::findTextLie("All is well.", "All is well. (It is fine.)", lie));
+    CHECK(lie.isAside && lie.shown == "(It is fine.)");
+    CHECK(LieTracker::findTextLie("The ox eats.", "The critic eats. (They know.)", lie));  // a swap beats an aside as the example
+    CHECK(!lie.isAside && lie.truth == "ox" && lie.shown == "critic");
+    CHECK(LieTracker::findTextLie("The ox and the deer.", "The ox and the lawyer.", lie));
+    CHECK(lie.truth == "deer" && lie.shown == "lawyer");                                   // the first real difference, not an equal word
+
+    begin("T25 LieTracker counts, reports and resets");
+    LieTracker tracker;
+    CHECK(tracker.dayCount() == 0 && tracker.totalCount() == 0);
+    CHECK(tracker.dayReport() == "Truth check: the narrator told the truth today.");
+    CHECK(tracker.journeyReport().empty());
+    tracker.recordText("The wagon rolls.", "The wagon rolls.");                            // not a lie
+    tracker.recordBars({ { "Food", 40, 40 }, { "Health", 70, 70 } });                      // not a lie
+    CHECK(tracker.totalCount() == 0);
+    tracker.recordText("The wagon rolls.", "The hearse rolls.");
+    CHECK(tracker.dayCount() == 1 && tracker.totalCount() == 1);
+    CHECK(tracker.dayReport().find("once") != std::string::npos);
+    CHECK(tracker.dayReport().find("\"hearse\" where the truth was \"wagon\"") != std::string::npos);
+    tracker.recordBars({ { "Food", 47, 41 }, { "Health", 10, 99 } });                      // several wrong bars still count once
+    CHECK(tracker.dayCount() == 2);
+    CHECK(tracker.dayReport().find("2 times") != std::string::npos);
+    CHECK(tracker.dayReport().find("Food bar showed 47 when the truth was 41") != std::string::npos);
+    CHECK(tracker.dayReport().find("Health bar") == std::string::npos);                    // only the first example is given
+    tracker.startDay();                                                                    // a new day: the day starts again, the journey does not
+    CHECK(tracker.dayCount() == 0 && tracker.totalCount() == 2);
+    CHECK(tracker.dayReport() == "Truth check: the narrator told the truth today.");
+    CHECK(tracker.journeyReport() == "The narrator misled you 2 times.");
+    tracker.recordText("All is well.", "All is well. (Nobody is coming.)");
+    CHECK(tracker.dayReport().find("comments you never asked for") != std::string::npos);
+    tracker.reset();
+    CHECK(tracker.totalCount() == 0 && tracker.dayCount() == 0 && tracker.journeyReport().empty());
+    CHECK(isAscii(tracker.dayReport()));
+
+    begin("T26 The tracker agrees with the real narrator on every real event text");
+    Trail trail;
+    CHECK(trail.loadFromFile("data/events.txt"));
+    const std::unique_ptr<NarrativeState> stable = NarrativeState::create(NarrativeKind::Stable);
+    const std::unique_ptr<NarrativeState> unrel = NarrativeState::create(NarrativeKind::Unreliable);
+    const std::unique_ptr<NarrativeState> broken = NarrativeState::create(NarrativeKind::Breakdown);
+    int texts = 0;
+    int detectedUnreliable = 0;
+    for (int day = 1; day <= trail.lastDay(); ++day) {
+        for (int part = 0; part < kPartsPerDay; ++part) {
+            const Event* event = trail.getEvent(day, static_cast<TimePart>(part));
+            if (!event) continue;
+            std::vector<std::string> samples{ event->getText() };
+            for (const Choice& choice : event->getChoices()) samples.push_back(choice.getResultText());
+            for (const std::string& sample : samples) {
+                ++texts;
+                for (unsigned seed = 1; seed <= 20; ++seed) {
+                    LieTracker::TextLie found;
+                    CHECK(!LieTracker::findTextLie(sample, stable->filterText(sample, seed), found));   // Stable never lies
+                    for (const NarrativeState* state : { unrel.get(), broken.get() }) {
+                        const std::string shown = state->filterText(sample, seed);
+                        const bool differs = shown != sample;
+                        CHECK(LieTracker::findTextLie(sample, shown, found) == differs);               // never misses, never invents
+                        if (differs && !found.isAside) {
+                            CHECK(!found.truth.empty() && !found.shown.empty() && found.truth != found.shown);
+                            CHECK(shown.find(found.shown) != std::string::npos);                        // the player really saw it
+                        }
+                        if (state == unrel.get() && differs) ++detectedUnreliable;
+                    }
+                }
+            }
+        }
+    }
+    CHECK(texts >= 15 * 5);
+    CHECK(detectedUnreliable > 0);                                                                     // the narrator does lie, and it is caught
+
+    // HUD bars: Stable is honest, Breakdown moves them, and the tracker notices.
+    LieTracker bars;
+    for (unsigned seed = 1; seed <= 50; ++seed) {
+        for (const NarrativeState* state : { stable.get(), unrel.get(), broken.get() }) {
+            std::vector<LieTracker::Bar> readings;
+            for (Stat stat : { Stat::Food, Stat::Health, Stat::Sanity, Stat::Wagon }) {
+                readings.push_back({ "x", state->shownValue(50, stat, seed), 50 });
+            }
+            LieTracker one;
+            one.recordBars(readings);
+            if (state == stable.get()) CHECK(one.totalCount() == 0);
+            bars.recordBars(readings);
+        }
+    }
+    CHECK(bars.totalCount() > 0);
+}
 
 static void testRealEvents(const fs::path& root) {
     begin("T15 The shipped data/events.txt loads cleanly with every slot filled");
@@ -531,6 +633,213 @@ static void testAudio(const fs::path& root) {
     }
 }
 
+
+// ---------------------------------------------------------------------------------------------
+// Round 2 playtest changes: difficulty levels, scene/action animations, remembered progress
+// ---------------------------------------------------------------------------------------------
+
+static void testDifficulty() {
+    begin("T27 Difficulty: Easy is gentler than Normal, Normal gentler than Hard; names, parsing, cycling");
+    const DifficultyRules& e = rulesFor(Difficulty::Easy);
+    const DifficultyRules& n = rulesFor(Difficulty::Normal);
+    const DifficultyRules& h = rulesFor(Difficulty::Hard);
+    CHECK(e.startFood >= n.startFood && n.startFood >= h.startFood);
+    CHECK(e.foodPerPart <= n.foodPerPart && n.foodPerPart <= h.foodPerPart);
+    CHECK(e.sanityPerPart <= n.sanityPerPart && n.sanityPerPart <= h.sanityPerPart);
+    CHECK(e.hardshipPerPart <= n.hardshipPerPart && n.hardshipPerPart <= h.hardshipPerPart);
+    CHECK(e.starvationDamage <= n.starvationDamage && n.starvationDamage <= h.starvationDamage);
+    CHECK(e.harmPercent <= n.harmPercent && n.harmPercent <= h.harmPercent);
+    CHECK(e.helpPercent >= n.helpPercent && n.helpPercent >= h.helpPercent);
+    CHECK(e.harmPercent > 0 && h.helpPercent > 0 && e.startFood <= Party::kMaxStat);
+
+    CHECK(std::string(difficultyName(Difficulty::Easy)) == "Easy" && std::string(difficultyName(Difficulty::Hard)) == "Hard");
+    Difficulty parsed = Difficulty::Normal;
+    CHECK(parseDifficulty("HARD", parsed) && parsed == Difficulty::Hard);
+    CHECK(parseDifficulty("easy", parsed) && parsed == Difficulty::Easy);
+    CHECK(!parseDifficulty("impossible", parsed) && parsed == Difficulty::Easy);          // untouched on failure
+    CHECK(nextDifficulty(Difficulty::Easy) == Difficulty::Normal && nextDifficulty(Difficulty::Normal) == Difficulty::Hard &&
+          nextDifficulty(Difficulty::Hard) == Difficulty::Easy);
+
+    // The same party on each difficulty: a fresh journey starts with that difficulty's food, and the trail's toll follows it
+    int previousToll = -1;
+    for (Difficulty d : { Difficulty::Easy, Difficulty::Normal, Difficulty::Hard }) {
+        Party p;
+        p.setDifficulty(d);
+        p.reset();
+        CHECK(p.difficulty() == d && p.getFood() == rulesFor(d).startFood);
+        const int foodBefore = p.getFood(), sanityBefore = p.getSanity(), wagonBefore = p.getWagon();
+        p.advanceTime();
+        CHECK(foodBefore - p.getFood() == rulesFor(d).foodPerPart);
+        CHECK(sanityBefore - p.getSanity() == rulesFor(d).sanityPerPart);
+        CHECK(wagonBefore - p.getWagon() == rulesFor(d).wagonPerPart);
+        const int toll = 100 - p.getHealth();
+        CHECK(toll >= rulesFor(d).hardshipPerPart);              // frail members lose a little more than the base hardship
+        CHECK(toll >= previousToll);                             // never gentler than the easier level
+        previousToll = toll;
+
+        Party copy(p);                                           // copies (used by the simulator) keep the difficulty
+        CHECK(copy.difficulty() == d);
+        Party other;
+        other = p;
+        CHECK(other.difficulty() == d);
+        p.reset();                                               // reset keeps the difficulty
+        CHECK(p.difficulty() == d && p.getFood() == rulesFor(d).startFood);
+    }
+
+    // Starvation damage follows the difficulty too
+    for (Difficulty d : { Difficulty::Easy, Difficulty::Hard }) {
+        Party p; p.setDifficulty(d); p.reset();
+        Effects drain; drain.food = -100;
+        p.apply(drain);
+        CHECK(p.getFood() == 0);
+        const int before = p.getHealth();
+        p.advanceTime();
+        CHECK(before - p.getHealth() >= rulesFor(d).hardshipPerPart + rulesFor(d).starvationDamage);
+    }
+
+    begin("T28 Party::adjusted scales harm and help, never to zero, never changing who is hit");
+    Party normal; normal.setDifficulty(Difficulty::Normal); normal.reset();
+    Party easy;   easy.setDifficulty(Difficulty::Easy);     easy.reset();
+    Party hard;   hard.setDifficulty(Difficulty::Hard);     hard.reset();
+    Effects fx; fx.food = -10; fx.health = -6; fx.sanity = 4; fx.wagon = -1; fx.member = "Granny";
+    const Effects ne = normal.adjusted(fx), ea = easy.adjusted(fx), ha = hard.adjusted(fx);
+    CHECK(ne.member == "Granny" && ea.member == "Granny" && ha.member == "Granny");
+    CHECK(ha.food <= ne.food && ne.food <= ea.food);                   // harm: Hard hurts most (more negative)
+    CHECK(ha.health <= ne.health && ne.health <= ea.health);
+    CHECK(ha.sanity <= ne.sanity && ne.sanity <= ea.sanity);           // help: Hard helps least
+    CHECK(ea.wagon < 0 && ne.wagon < 0 && ha.wagon < 0);               // -1 stays a loss on every difficulty
+    CHECK(ha.food < fx.food);                                          // Hard really is harsher than the data file
+    Effects zero;
+    CHECK(hard.adjusted(zero).isZero() && easy.adjusted(zero).isZero());
+    Effects tiny; tiny.sanity = 1;
+    CHECK(hard.adjusted(tiny).sanity >= 1);                            // a +1 never rounds away
+    // What describe() reports is what apply() does, so the bracketed summary stays true
+    Party scratch; scratch.setDifficulty(Difficulty::Hard); scratch.reset();
+    const Effects landed = scratch.adjusted(fx);
+    const int foodBefore = scratch.getFood();
+    scratch.apply(landed);
+    CHECK(scratch.getFood() == std::max(0, std::min(100, foodBefore + landed.food)));
+}
+
+static void testAnimations(const fs::path& root, const fs::path& tmp) {
+    begin("T29 Animation names: every scene and action round-trips, parsing forgives case and dashes");
+    for (int i = 0; i < kSceneCount; ++i) {
+        SceneId back = SceneId::Trail;
+        CHECK(parseScene(sceneName(static_cast<SceneId>(i)), back) && static_cast<int>(back) == i);
+    }
+    for (int i = 0; i <= kActionCount; ++i) {
+        ActionId back = ActionId::None;
+        CHECK(parseAction(actionName(static_cast<ActionId>(i)), back) && static_cast<int>(back) == i);
+    }
+    SceneId sc = SceneId::Trail; ActionId ac = ActionId::None;
+    CHECK(parseScene("Oxen-Circle", sc) && sc == SceneId::OxenCircle);
+    CHECK(parseScene("MAP MAN", sc) && sc == SceneId::MapMan);
+    CHECK(parseAction("FLEE", ac) && ac == ActionId::Flee);
+    CHECK(!parseScene("moon_base", sc) && !parseAction("dance", ac));
+    CHECK(kSceneCount >= 10 && kActionCount >= 15);
+
+    begin("T30 The shipped events all have an animation, and every animation is used somewhere");
+    Trail trail;
+    CHECK(trail.loadFromFile((root / "data" / "events.txt").string()));
+    bool sceneUsed[kSceneCount] = {};
+    bool actionUsed[kActionCount + 1] = {};
+    int untaggedEvents = 0, untaggedChoices = 0, sawUnknownKeyWarning = 0;
+    for (int day = 1; day <= trail.lastDay(); ++day) {
+        for (int part = 0; part < kPartsPerDay; ++part) {
+            ConditionSet everything;
+            everything.set(Condition::LowFood); everything.set(Condition::LowWagon); everything.set(Condition::LowHealth);
+            for (const ConditionSet& active : { ConditionSet(), everything }) {
+                const Event* ev = trail.getEvent(day, static_cast<TimePart>(part), active);
+                if (!ev) continue;
+                if (ev->getScene() == SceneId::Trail) ++untaggedEvents;
+                sceneUsed[static_cast<int>(ev->getScene())] = true;
+                for (const Choice& choice : ev->getChoices()) {
+                    if (choice.getAction() == ActionId::None) ++untaggedChoices;
+                    actionUsed[static_cast<int>(choice.getAction())] = true;
+                }
+            }
+        }
+    }
+    for (const std::string& w : trail.getWarnings()) {
+        if (w.find("unknown scene") != std::string::npos || w.find("unknown action") != std::string::npos) ++sawUnknownKeyWarning;
+    }
+    CHECK(untaggedEvents == 0 && untaggedChoices == 0);
+    CHECK(sawUnknownKeyWarning == 0);
+    for (int i = 1; i < kSceneCount; ++i) CHECK(sceneUsed[i]);          // (Trail is the default, not an event scene)
+    for (int i = 1; i <= kActionCount; ++i) CHECK(actionUsed[i]);       // no dead animations
+
+    begin("T31 A bad scene or action name only warns: the event and its choices still load");
+    writeFile(tmp / "anim.txt",
+        "[EVENT]\nday = 1\npart = Dawn\nscene = River\ntext = ok\n"
+        "[CHOICE]\nlabel = a\nresult = b\naction = Flee\n"
+        "[CHOICE]\nlabel = c\nresult = d\naction = moonwalk\n"
+        "[EVENT]\nday = 1\npart = Noon\nscene = underwater\ntext = bad scene\n"
+        "[CHOICE]\nlabel = a\nresult = b\n");
+    Trail anim;
+    CHECK(anim.loadFromFile((tmp / "anim.txt").string()));
+    CHECK(anim.eventCount() == 2);
+    const Event* river = anim.getEvent(1, TimePart::Dawn);
+    CHECK(river && river->getScene() == SceneId::River);
+    CHECK(river && river->getChoices().size() == 2 && river->getChoices()[0].getAction() == ActionId::Flee &&
+          river->getChoices()[1].getAction() == ActionId::None);
+    const Event* noon = anim.getEvent(1, TimePart::Noon);
+    CHECK(noon && noon->getScene() == SceneId::Trail);
+    int warned = 0;
+    for (const std::string& w : anim.getWarnings()) {
+        if (w.find("unknown action") != std::string::npos || w.find("unknown scene") != std::string::npos) ++warned;
+    }
+    CHECK(warned == 2);
+}
+
+static void testProgress(const fs::path& tmp) {
+    begin("T32 Progress: endings are classified, discoveries count once, and everything round-trips through the file");
+    CHECK(Progress::classify(true, 4, 50, 80) == EndingId::Intact);
+    CHECK(Progress::classify(true, 3, 50, 80) == EndingId::LostOne);
+    CHECK(Progress::classify(true, 2, 50, 80) == EndingId::Half);
+    CHECK(Progress::classify(true, 1, 50, 80) == EndingId::Lone);
+    CHECK(Progress::classify(false, 0, 50, 80) == EndingId::EveryoneDied);
+    CHECK(Progress::classify(false, 2, 0, 80) == EndingId::SanityLost);
+    CHECK(Progress::classify(false, 2, 10, 0) == EndingId::WagonLost);
+    for (int i = 0; i < kEndingCount; ++i) CHECK(std::string(endingTitle(static_cast<EndingId>(i))).size() > 3);
+
+    Progress p;
+    CHECK(p.scenesSeen() == 0 && p.actionsSeen() == 0 && p.endingsSeen() == 0 && p.clearedCount() == 0);
+    CHECK(p.markScene(SceneId::Deer) && !p.markScene(SceneId::Deer));         // new once, then not new
+    CHECK(p.markAction(ActionId::Flee) && !p.markAction(ActionId::Flee));
+    CHECK(!p.markAction(ActionId::None));                                      // "no animation" is not a discovery
+    CHECK(p.markEnding(EndingId::Half) && !p.markEnding(EndingId::Half));
+    p.markCleared(Difficulty::Hard);
+    p.difficulty = Difficulty::Hard;
+    p.runs = 7;
+    CHECK(p.scenesSeen() == 1 && p.actionsSeen() == 1 && p.endingsSeen() == 1 && p.clearedCount() == 1);
+    CHECK(p.animationsSeen() == 2 && Progress::animationTotal() == kSceneCount + kActionCount);
+
+    const std::string file = (tmp / "save" / "progress.txt").string();           // a folder that doesn't exist yet
+    CHECK(p.save(file));
+    Progress q = Progress::load(file);
+    CHECK(q.difficulty == Difficulty::Hard && q.runs == 7);
+    CHECK(q.sceneSeen(SceneId::Deer) && !q.sceneSeen(SceneId::River));
+    CHECK(q.actionSeen(ActionId::Flee) && !q.actionSeen(ActionId::Burn));
+    CHECK(q.endingSeen(EndingId::Half) && !q.endingSeen(EndingId::Intact));
+    CHECK(q.cleared(Difficulty::Hard) && !q.cleared(Difficulty::Easy));
+    CHECK(q.scenesSeen() == 1 && q.actionsSeen() == 1 && q.endingsSeen() == 1);
+
+    begin("T33 Progress: a missing, damaged or unwritable file never breaks the game");
+    std::vector<std::string> warnings;
+    Progress none = Progress::load((tmp / "nothing_here.txt").string(), &warnings);
+    CHECK(warnings.empty() && none.animationsSeen() == 0 && none.difficulty == Difficulty::Normal);
+    writeFile(tmp / "damaged.txt", "\xEF\xBB\xBF" "this is nonsense\ndifficulty = ludicrous\nruns = lots\nscenes = deer,moon_base\n"
+                                    "actions = flee,dance\nendings = half,heaven\ncleared = easy,never\nmystery = 1\n");
+    warnings.clear();
+    Progress damaged = Progress::load((tmp / "damaged.txt").string(), &warnings);
+    CHECK(warnings.size() >= 7);                                              // every bad line is reported
+    CHECK(damaged.difficulty == Difficulty::Normal && damaged.runs == 0);
+    CHECK(damaged.sceneSeen(SceneId::Deer) && damaged.actionSeen(ActionId::Flee) &&
+          damaged.endingSeen(EndingId::Half) && damaged.cleared(Difficulty::Easy));   // the good parts survive
+    CHECK(damaged.scenesSeen() == 1 && damaged.actionsSeen() == 1);
+    CHECK(!Progress().save((tmp / "save" / "progress.txt" / "inside_a_file" / "x.txt").string()));  // can't write: false, no crash
+}
+
 int main(int argc, char** argv) {
     const fs::path root = argc > 1 ? fs::path(argv[1]) : fs::current_path();
     if (!fs::exists(root / "data" / "events.txt")) {
@@ -550,12 +859,16 @@ int main(int argc, char** argv) {
     testPartyRules();
     testObservers();
     testNarrator();
+    testLieTracker();
     testRealEvents(root);
     testBrokenFiles(tmp);
     testPosition(root);
     testSettings(tmp);
     testPlaytestLog(tmp);
     testAudio(root);
+    testDifficulty();
+    testAnimations(root, tmp);
+    testProgress(tmp);
 
     fs::remove_all(tmp);
     std::cout << "\n" << g_checks << " checks, " << g_failed << " failed\n";

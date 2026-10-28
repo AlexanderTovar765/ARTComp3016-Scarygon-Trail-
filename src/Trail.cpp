@@ -100,6 +100,8 @@ bool Trail::loadFromFile(const std::string& path) {
     std::string label;
     std::string result;
     Effects effects;
+    SceneId eventScene = SceneId::Trail;
+    ActionId choiceAction = ActionId::None;
 
     auto warn = [&](int line, const std::string& message) {
         m_warnings.push_back(path + " line " + std::to_string(line) + ": " + message);
@@ -114,11 +116,12 @@ bool Trail::loadFromFile(const std::string& path) {
         } else {
             if (label.size() > kMaxLabelChars)   warn(choiceLine, "label is long and may be cut off on its button");
             if (result.size() > kMaxResultChars) warn(choiceLine, "result text is long and may be cut off");
-            choices.emplace_back(label, result, effects);
+            choices.emplace_back(label, result, effects, choiceAction);
         }
         label.clear();
         result.clear();
         effects = Effects();
+        choiceAction = ActionId::None;
     };
 
     auto finishEvent = [&]() {
@@ -153,7 +156,7 @@ bool Trail::loadFromFile(const std::string& path) {
                 warn(eventLine, "duplicate event for that day, part and condition; keeping the first one");
                 if (slot.empty()) m_events.erase(key);
             } else {
-                slot.emplace_back(day, part, text, choices, eventCondition);
+                slot.emplace_back(day, part, text, choices, eventCondition, eventScene);
                 ++m_eventCount;
             }
         }
@@ -166,6 +169,7 @@ bool Trail::loadFromFile(const std::string& path) {
         day = 0;
         partSet = false;
         eventCondition.reset();
+        eventScene = SceneId::Trail;
         text.clear();
         choices.clear();
     };
@@ -220,6 +224,12 @@ bool Trail::loadFromFile(const std::string& path) {
                 label = value;
             } else if (key == "result") {
                 result = value;
+            } else if (key == "action") {
+                // Animations are decoration: a bad name never skips the event, it just gets no animation.
+                if (!parseAction(value, choiceAction)) {
+                    warn(lineNumber, "unknown action '" + value + "'; the choice gets no animation");
+                    choiceAction = ActionId::None;
+                }
             } else if (key == "member") {
                 const int index = findMemberIndex(value);
                 if (index >= 0) {
@@ -254,6 +264,11 @@ bool Trail::loadFromFile(const std::string& path) {
                 } else {
                     warn(lineNumber, "unknown part '" + value + "' (use Dawn, Mid-Morning, Noon, Evening or Night); the whole event is skipped");
                     eventOk = false;
+                }
+            } else if (key == "scene") {
+                if (!parseScene(value, eventScene)) {
+                    warn(lineNumber, "unknown scene '" + value + "'; the event uses the default scene");
+                    eventScene = SceneId::Trail;
                 }
             } else if (key == "text") {
                 text = value;

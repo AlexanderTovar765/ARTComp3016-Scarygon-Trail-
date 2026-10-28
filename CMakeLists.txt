@@ -42,7 +42,11 @@ set(GAME_LOGIC_SOURCES
     src/NarrativeState.cpp
     src/Settings.cpp
     src/PlaytestLog.cpp
-    src/AudioManager.cpp)
+    src/AudioManager.cpp
+    src/LieTracker.cpp
+    src/Difficulty.cpp
+    src/Animations.cpp
+    src/Progress.cpp)
 
 add_executable(ScarygonTrail
     src/main.cpp
@@ -50,6 +54,7 @@ add_executable(ScarygonTrail
     src/Button.cpp
     src/TextRenderer.cpp
     src/SceneRenderer.cpp
+    src/SceneActors.cpp
     ${GAME_LOGIC_SOURCES})
 
 target_include_directories(ScarygonTrail PRIVATE src)
@@ -85,7 +90,8 @@ add_test(NAME logic_tests COMMAND logic_tests WORKING_DIRECTORY "${CMAKE_CURRENT
 
 add_executable(balance_sim EXCLUDE_FROM_ALL tools/balance_sim.cpp
     src/Effects.cpp src/PartyMember.cpp src/Party.cpp src/ThresholdWatcher.cpp
-    src/MemberWatcher.cpp src/Trail.cpp src/NarrativeState.cpp)
+    src/MemberWatcher.cpp src/Trail.cpp src/NarrativeState.cpp
+    src/Difficulty.cpp src/Animations.cpp)
 target_include_directories(balance_sim PRIVATE src)
 
 # ---- Runtime files next to the executable ----------------------------------

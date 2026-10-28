@@ -1,11 +1,13 @@
 #include "Game.h"
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <iostream>
 
 namespace {
     const char* const kEventFile    = "data/events.txt";     // relative to the working directory
     const char* const kSettingsFile = "data/settings.txt";
+    const char* const kProgressFile = "save/progress.txt";
     const char* const kAudioFolder  = "assets/audio";
     const char* const kLogFolder    = "playtest_logs";
 
@@ -98,6 +100,11 @@ bool Game::init(const char* title, int width, int height) {
         m_audio.init(kAudioFolder);
     }
 
+    std::vector<std::string> progressWarnings;
+    m_progress = Progress::load(kProgressFile, &progressWarnings);
+    for (const std::string& warning : progressWarnings) std::cerr << "[progress] " << warning << "\n";
+    m_party.setDifficulty(m_progress.difficulty);
+
     const bool loaded = m_trail.loadFromFile(kEventFile);
     for (const std::string& warning : m_trail.getWarnings()) {
         std::cerr << "[events] " << warning << "\n";
@@ -179,36 +186,71 @@ void Game::update() {
 void Game::showTitle() {
     m_phase = Phase::Title;
     m_audio.setMood(Mood::Calm);
+    m_stage = SceneRenderer::Stage();
 
-    std::string status = "Sound: ";
+    std::string status = "Seen: " + std::to_string(m_progress.animationsSeen()) + "/" +
+                         std::to_string(Progress::animationTotal()) + " animations, " +
+                         std::to_string(m_progress.endingsSeen()) + "/" + std::to_string(kEndingCount) + " endings.";
+    if (m_progress.clearedCount() > 0) {
+        status += " Cleared:";
+        for (Difficulty d : { Difficulty::Easy, Difficulty::Normal, Difficulty::Hard }) {
+            if (m_progress.cleared(d)) status += std::string(" ") + difficultyName(d);
+        }
+        status += ".";
+    }
+    status += "  Sound: ";
     if (!m_audio.isAvailable())  status += "unavailable";
     else                         status += m_audio.isMuted() ? "OFF" : "ON";
-    status += " (press M).  Playtest log: ";
-    status += m_settings.playtestLog ? "ON, anonymous" : "OFF";
-    status += " (press L).";
+    status += " (M). Log: ";
+    status += m_settings.playtestLog ? "ON" : "OFF";
+    status += " (L).";
 
     showScreen("A journey west, with one family, many oxen, and an unreliable amount of luck. "
                "Choose carefully. Or don't.",
-               { "Start journey", "How to play", "Quit" }, false, status);
+               { "Start journey", std::string("Difficulty: ") + difficultyName(m_progress.difficulty),
+                 "How to play", "Quit" }, false, status);
+}
+
+void Game::cycleDifficulty() {
+    m_progress.difficulty = nextDifficulty(m_progress.difficulty);
+    m_party.setDifficulty(m_progress.difficulty);
+    saveProgress();
+    showTitle();
+}
+
+void Game::saveProgress() {
+    if (!m_progress.save(kProgressFile)) {
+        static bool told = false;   // say it once: progress then only lasts until the game is closed
+        if (!told) { std::cerr << "[progress] could not write " << kProgressFile << "; progress will not be remembered\n"; told = true; }
+    }
 }
 
 void Game::showInstructions() {
     m_phase = Phase::Instructions;
-    showScreen("Each day has five parts, and each part brings one event. Pick a choice with the mouse "
-               "or the 1-4 keys. Watch Food, Health, Sanity, the Wagon and your family: the trail takes "
-               "its toll every part. When your sanity slips the game starts to lie to you, but what "
-               "happens to you is always true. M mutes the sound.",
+    showScreen("Each day has five parts, each with one event. Choose with the mouse or keys 1-4. Watch "
+               "Food, Health, Sanity, the Wagon and your family: the trail takes its toll every part. "
+               "The NARRATOR meter shows how far to trust the text. When sanity slips the game lies, but "
+               "the (bracketed) summary and the day recap are always true. Pick Easy, Normal or Hard on the title screen. "
+               "Every scene, reaction and ending you find is remembered, so there is always something new to see. M mutes.",
                { "Start journey", "Back" });
 }
 
 void Game::startGame() {
+    m_party.setDifficulty(m_progress.difficulty);
     m_party.reset();
     m_trail.reset();
     m_thresholds.clearWarnings();
     m_memberWatcher.clearMessages();
     m_partsPlayed = 0;
     setNarrator(NarrativeKind::Stable);
-    m_pendingNotice.clear();
+    m_shiftTo.reset();
+    m_lies.reset();
+    m_stage = SceneRenderer::Stage();
+    m_newDiscoveries = 0;
+    m_ending.reset();
+    m_endingIsNew = false;
+    ++m_progress.runs;
+    saveProgress();
 
     if (m_settings.playtestLog && !m_log.isOpen()) {
         const std::string label = std::string("built ") + __DATE__ + " " + __TIME__;
@@ -218,7 +260,7 @@ void Game::startGame() {
             std::cerr << "[playtest] could not create a log file in " << kLogFolder << "\n";
         }
     }
-    m_log.logRunStart();
+    m_log.logRunStart(std::string("new run, difficulty ") + difficultyName(m_party.difficulty()));
 
     m_audio.play(Sfx::Start);
     showCurrentEvent();
@@ -242,6 +284,9 @@ void Game::showCurrentEvent() {
               << "\n";
 
     m_phase = Phase::Event;
+    m_stage.scene = m_activeEvent->getScene();
+    m_stage.action = ActionId::None;
+    if (m_progress.markScene(m_stage.scene)) ++m_newDiscoveries;
     std::vector<std::string> labels;
     for (const Choice& choice : m_activeEvent->getChoices()) {
         labels.push_back(choice.getLabel());  // button labels always tell the truth
@@ -254,15 +299,17 @@ void Game::onEventChoice(std::size_t index) {
     if (!event || index >= event->getChoices().size()) return;
 
     const Choice& choice = event->getChoices()[index];
-    const Effects effects = choice.getEffects();
+    const Effects effects = m_party.adjusted(choice.getEffects());   // Easy / Normal / Hard scale what choices do
 
     m_party.apply(effects);
     const Effects upkeep = m_party.advanceTime();  // the trail's toll: food, sanity, wagon (and starvation)
     ++m_partsPlayed;
 
-    const NarrativeKind before = m_narrator->kind();
-    updateNarrator();                              // sanity may have crossed a threshold
-    const bool narratorChanged = before != m_narrator->kind();
+    // If sanity crossed a threshold the narrator does NOT change mid-screen. This result is still
+    // shown by the old narrator, then a screen of its own announces the change (before any lies).
+    const NarrativeKind wanted = NarrativeState::kindForSanity(m_party.getSanity());
+    m_shiftTo.reset();
+    if (wanted != m_narrator->kind()) m_shiftTo = wanted;
 
     std::cout << "Day " << m_trail.currentDay() << ", " << partName(m_trail.currentPart())
               << ": chose [" << (index + 1) << "] " << choice.getLabel()
@@ -283,13 +330,18 @@ void Game::onEventChoice(std::size_t index) {
     if (someoneDied)             m_audio.play(Sfx::Death);
     else if (!warnings.empty())  m_audio.play(Sfx::Warning);
     else                         m_audio.play(net > 0 ? Sfx::Good : Sfx::Bad);
-    if (narratorChanged)         m_audio.play(Sfx::StateChange);
 
     m_log.logChoice(m_trail.currentDay(), partName(m_trail.currentPart()),
                     event->getCondition() ? conditionName(*event->getCondition()) : "normal",
                     static_cast<int>(index) + 1, choice.getLabel(),
                     m_party.getFood(), m_party.getHealth(), m_party.getSanity(), m_party.getWagon(),
                     m_narrator->name(), m_party.aliveCount());
+
+    // The family reacts: the top picture plays the animation that goes with this choice.
+    m_stage.action = choice.getAction();
+    m_stage.outcome = net > 0 ? 1 : (net < 0 ? -1 : 0);
+    m_stageStartMs = SDL_GetTicks();
+    if (m_progress.markAction(m_stage.action)) ++m_newDiscoveries;
 
     m_phase = Phase::Result;
     showScreen(choice.getResultText(), { "Continue" }, true, factual);
@@ -302,12 +354,50 @@ void Game::onResultContinue() {
         return;
     }
 
+    if (m_shiftTo) {            // the narrator's state changed: say so, on its own screen
+        showNarratorShift();
+        return;
+    }
+    proceedAfterResult();
+}
+
+void Game::proceedAfterResult() {
     if (m_trail.isLastPartOfDay()) {
         showDaySummary();
     } else {
         m_trail.advance();
         showCurrentEvent();
     }
+}
+
+void Game::showNarratorShift() {
+    const NarrativeKind kind = *m_shiftTo;
+    m_shiftTo.reset();
+    setNarrator(kind);          // the music and the trust meter change now, before any lying starts
+    m_audio.play(Sfx::StateChange);
+    std::cout << "[narrator] now " << m_narrator->name() << " (sanity " << m_party.getSanity() << ")\n";
+
+    std::string text;
+    switch (kind) {
+    case NarrativeKind::Unreliable:
+        text = "The narrator is starting to slip. From now on it may swap words and the bars may be wrong. "
+               "The summary in brackets after each result, and the recap at the end of each day, are always true.";
+        break;
+    case NarrativeKind::Breakdown:
+        text = "The narrator has broken down. Expect wrong words, wrong bars, numbers hidden behind question "
+               "marks and comments nobody asked for. The brackets after each result and the day recap are still true.";
+        break;
+    case NarrativeKind::Stable:
+        text = "The narrator has recovered. For now, what it tells you is true.";
+        break;
+    }
+
+    m_phase = Phase::NarratorShift;
+    showScreen(text, { "Continue" });
+}
+
+void Game::onNarratorShiftContinue() {
+    proceedAfterResult();
 }
 
 void Game::showDaySummary() {
@@ -318,7 +408,7 @@ void Game::showDaySummary() {
                { "Continue" }, false,
                "Food " + std::to_string(m_party.getFood()) + ", Health " + std::to_string(m_party.getHealth()) +
                ", Sanity " + std::to_string(m_party.getSanity()) + ", Wagon " +
-               std::to_string(m_party.getWagon()) + ".");
+               std::to_string(m_party.getWagon()) + ". " + m_lies.dayReport());
 }
 
 void Game::onDaySummaryContinue() {
@@ -327,6 +417,7 @@ void Game::onDaySummaryContinue() {
                    std::to_string(m_trail.currentDay()) + ".", true);
         return;
     }
+    m_lies.startDay();   // tomorrow's truth check starts from zero
     m_trail.advance();
     showCurrentEvent();
 }
@@ -352,14 +443,14 @@ std::string Game::journeySummary() const {
            std::to_string(m_party.getFood()) + ", Health " + std::to_string(m_party.getHealth()) +
            ", Sanity " + std::to_string(m_party.getSanity()) + ", Wagon " + std::to_string(m_party.getWagon()) +
            ". Parts survived: " + std::to_string(m_partsPlayed) + " of " + std::to_string(totalParts) +
-           ". " + rank;
+           ". " + rank + (m_lies.totalCount() > 0 ? " " + m_lies.journeyReport() : std::string());
 }
 
 void Game::showEnding(const std::string& text, bool canRestart, bool withSummary) {
     m_phase = Phase::Ending;
     m_canRestart = canRestart;
     setNarrator(NarrativeKind::Stable);  // the ending always tells the truth
-    m_pendingNotice.clear();
+    m_shiftTo.reset();
     m_audio.setMood(Mood::Silent);
 
     if (withSummary) {
@@ -367,11 +458,22 @@ void Game::showEnding(const std::string& text, bool canRestart, bool withSummary
         m_log.logRunEnd(m_party.isAlive() ? "survived" : m_party.causeOfDeath(), m_partsPlayed,
                         m_party.aliveCount(), m_party.getFood(), m_party.getHealth(),
                         m_party.getSanity(), m_party.getWagon());
+
+        // Remember how it ended: every different ending is something new to find.
+        const EndingId ending = Progress::classify(m_party.isAlive(), m_party.aliveCount(),
+                                                   m_party.getSanity(), m_party.getWagon());
+        m_ending = ending;
+        m_endingIsNew = m_progress.markEnding(ending);
+        if (m_party.isAlive()) m_progress.markCleared(m_party.difficulty());
+        saveProgress();
+    } else {
+        m_ending.reset();
     }
+    m_stage = SceneRenderer::Stage();   // the road, quiet again
 
     const std::string summary = withSummary ? journeySummary() : "";
     if (canRestart) {
-        showScreen(text, { "Play again", "Quit" }, false, summary);
+        showScreen(text, { "Play again", "Change difficulty", "Quit" }, false, summary);
     } else {
         showScreen(text, { "Quit" }, false, summary);
     }
@@ -384,7 +486,8 @@ void Game::selectChoice(std::size_t index) {
     switch (m_phase) {
     case Phase::Title:
         if (index == 0)      startGame();
-        else if (index == 1) showInstructions();
+        else if (index == 1) cycleDifficulty();
+        else if (index == 2) showInstructions();
         else                 m_running = false;
         break;
     case Phase::Instructions:
@@ -393,13 +496,12 @@ void Game::selectChoice(std::size_t index) {
         break;
     case Phase::Event:      onEventChoice(index);    break;
     case Phase::Result:     onResultContinue();      break;
+    case Phase::NarratorShift: onNarratorShiftContinue(); break;
     case Phase::DaySummary: onDaySummaryContinue();  break;
     case Phase::Ending:
-        if (m_canRestart && index == 0) {
-            startGame();
-        } else {
-            m_running = false;
-        }
+        if (m_canRestart && index == 0)      startGame();
+        else if (m_canRestart && index == 1) showTitle();      // change the difficulty, then start again
+        else                                 m_running = false;
         break;
     }
 }
@@ -422,15 +524,6 @@ void Game::setNarrator(NarrativeKind kind) {
     m_audio.setMood(moodFor(kind));  // the music follows the narrator
 }
 
-void Game::updateNarrator() {
-    const NarrativeKind wanted = NarrativeState::kindForSanity(m_party.getSanity());
-    if (wanted == m_narrator->kind()) return;
-
-    setNarrator(wanted);
-    m_pendingNotice = m_narrator->enterMessage();  // shown once, on the next screen
-    std::cout << "[narrator] now " << m_narrator->name() << " (sanity " << m_party.getSanity() << ")\n";
-}
-
 // ---------------------------------------------------------------------------
 // Bottom panel: text, buttons, mouse
 // ---------------------------------------------------------------------------
@@ -440,12 +533,25 @@ void Game::showScreen(const std::string& narrative, const std::vector<std::strin
     ++m_screenSeed;  // new screen = new lies; the same screen always shows the same ones
 
     std::string shown = lie ? m_narrator->filterText(narrative, m_screenSeed) : narrative;
+    if (lie) m_lies.recordText(narrative, shown);   // keep score: it is revealed in the day's truth check
+
+    // The HUD bars lie too, on the screens that show them (the day recap always shows the truth)
+    if (m_phase == Phase::Event || m_phase == Phase::Result) {
+        const struct { const char* name; Stat stat; int truth; } bars[] = {
+            { "Food",   Stat::Food,   m_party.getFood()   },
+            { "Health", Stat::Health, m_party.getHealth() },
+            { "Sanity", Stat::Sanity, m_party.getSanity() },
+            { "Wagon",  Stat::Wagon,  m_party.getWagon()  },
+        };
+        std::vector<LieTracker::Bar> readings;
+        for (const auto& bar : bars) {
+            readings.push_back({ bar.name, m_narrator->shownValue(bar.truth, bar.stat, m_screenSeed), bar.truth });
+        }
+        m_lies.recordBars(readings);
+    }
+
     if (!factual.empty()) {
         shown += " " + factual;
-    }
-    if (!m_pendingNotice.empty()) {
-        shown += " " + m_pendingNotice;
-        m_pendingNotice.clear();
     }
     m_narrative = shown;
 
@@ -508,7 +614,9 @@ void Game::handleMouseClick(float x, float y) {
 
 void Game::drawStatBar(const char* label, Stat stat, int actualValue, float y, SDL_Color fill) {
     // What the HUD shows may be a lie, depending on the narrator's state.
-    const int shown = m_narrator->shownValue(actualValue, stat, m_screenSeed);
+    // The day recap is the moment of truth: the bars show the real numbers.
+    const bool truth = m_phase == Phase::DaySummary || m_phase == Phase::Ending;
+    const int shown = truth ? actualValue : m_narrator->shownValue(actualValue, stat, m_screenSeed);
 
     // Label
     SDL_SetRenderDrawColor(m_renderer, 60, 40, 30, 255);
@@ -530,7 +638,8 @@ void Game::drawStatBar(const char* label, Stat stat, int actualValue, float y, S
     SDL_SetRenderDrawColor(m_renderer, 90, 70, 50, 255);
     SDL_RenderRect(m_renderer, &track);
     SDL_SetRenderDrawColor(m_renderer, 60, 40, 30, 255);
-    m_text.drawLine(m_renderer, m_narrator->valueLabel(shown), kStatBarX + kStatBarWidth + 12.0f, y, kStatScale);
+    m_text.drawLine(m_renderer, truth ? std::to_string(shown) : m_narrator->valueLabel(shown),
+                    kStatBarX + kStatBarWidth + 12.0f, y, kStatScale);
 }
 
 void Game::drawMemberCard(std::size_t index, float x) {
@@ -540,9 +649,10 @@ void Game::drawMemberCard(std::size_t index, float x) {
     m_scene.drawPortrait(m_renderer, portrait, static_cast<int>(index), member.getStatus());
 
     // Little health bar. It is part of the HUD, so it lies like the rest (but the dead stay empty).
-    const int shown = member.isAlive()
-        ? m_narrator->shownValue(member.getHealth(), Stat::Health, m_screenSeed + 17U * static_cast<unsigned>(index + 1))
-        : 0;
+    const bool truth = m_phase == Phase::DaySummary || m_phase == Phase::Ending;
+    const int shown = !member.isAlive() ? 0
+        : truth ? member.getHealth()
+                : m_narrator->shownValue(member.getHealth(), Stat::Health, m_screenSeed + 17U * static_cast<unsigned>(index + 1));
     const float fraction = static_cast<float>(std::max(0, std::min(shown, 100))) / 100.0f;
     const SDL_FRect track{ x, kPortraitY + kPortraitSize + 4.0f, kPortraitSize, 6.0f };
     SDL_SetRenderDrawColor(m_renderer, 185, 165, 125, 255);
@@ -567,6 +677,9 @@ void Game::renderHud() {
     SDL_SetRenderDrawColor(m_renderer, 60, 40, 30, 255);
     m_text.drawLine(m_renderer, heading, kPadding, kPadding, kHeadingScale);
 
+    // How far to trust what the game says right now
+    drawNarratorMeter();
+
     // The party's four stats
     drawStatBar("Food",   Stat::Food,   m_party.getFood(),   76.0f,  SDL_Color{ 205, 150,  55, 255 });
     drawStatBar("Health", Stat::Health, m_party.getHealth(), 108.0f, SDL_Color{ 190,  60,  50, 255 });
@@ -578,12 +691,108 @@ void Game::renderHud() {
         drawMemberCard(i, kPortraitX + kPortraitStep * static_cast<float>(i));
     }
 
-    // The wagon and its oxen, under a sky that follows the time of day
-    m_scene.drawScene(m_renderer, kSceneArea, m_trail.currentPart(), SDL_GetTicks(), m_narrator->dread());
+    // The road: the event's scene while you decide, the family's reaction once you have, under a sky
+    // that follows the time of day.
+    SceneRenderer::Stage stage = m_stage;
+    if (m_phase == Phase::Result) {
+        stage.actionSeconds = static_cast<float>(SDL_GetTicks() - m_stageStartMs) / 1000.0f;
+    } else if (m_phase == Phase::Event) {
+        stage.action = ActionId::None;
+    } else {
+        stage = SceneRenderer::Stage();   // narrator shifts, recaps and endings: just the road
+    }
+    m_scene.drawStage(m_renderer, m_text, kSceneArea, m_trail.currentPart(), SDL_GetTicks(),
+                      m_narrator->dread(), stage);
 
     // How far along the trail we are
     m_scene.drawProgress(m_renderer, m_text, kProgressArea, m_trail.lastDay(),
                          m_trail.currentDay(), m_trail.currentPart());
+}
+
+void Game::drawNarratorMeter() {
+    // A label that is always on screen, so the player can see how far to trust the text.
+    const char* label = "NARRATOR: TRUSTWORTHY";
+    SDL_Color color{ 70, 130, 70, 255 };
+    switch (m_narrator->kind()) {
+    case NarrativeKind::Unreliable: label = "NARRATOR: SHAKY";  color = SDL_Color{ 200, 140,  40, 255 }; break;
+    case NarrativeKind::Breakdown:  label = "NARRATOR: LYING";  color = SDL_Color{ 190,  60,  50, 255 }; break;
+    case NarrativeKind::Stable:     break;
+    }
+    if (m_phase == Phase::DaySummary || m_phase == Phase::Ending) {
+        label = "NARRATOR: TRUTH CHECK";
+        color = SDL_Color{ 70, 130, 70, 255 };
+    }
+
+    constexpr float scale = 1.5f;
+    const float width = m_text.textWidth(label, scale) + 20.0f;
+    const SDL_FRect pill{ kPadding, 50.0f, width, 20.0f };
+    SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, 255);
+    SDL_RenderFillRect(m_renderer, &pill);
+    SDL_SetRenderDrawColor(m_renderer, 245, 240, 225, 255);
+    m_text.drawLine(m_renderer, label, pill.x + 10.0f, pill.y + 4.0f, scale);
+    drawDifficultyTag(pill.x + width + 8.0f);
+}
+
+void Game::drawDifficultyTag(float x) {
+    const char* name = difficultyName(m_party.difficulty());
+    std::string label = name;
+    for (char& c : label) c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+    constexpr float scale = 1.5f;
+    const SDL_FRect tag{ x, 50.0f, m_text.textWidth(label, scale) + 16.0f, 20.0f };
+    SDL_SetRenderDrawColor(m_renderer, 90, 70, 50, 255);
+    SDL_RenderFillRect(m_renderer, &tag);
+    SDL_SetRenderDrawColor(m_renderer, 245, 240, 225, 255);
+    m_text.drawLine(m_renderer, label, tag.x + 8.0f, tag.y + 4.0f, scale);
+}
+
+void Game::drawNarratorBanner() {
+    // Drawn over the scene when the narrator's state changes, so it cannot be missed.
+    const char* top = "THE NARRATOR";
+    const char* bottom = "HAS RECOVERED";
+    SDL_Color color{ 70, 130, 70, 255 };
+    switch (m_narrator->kind()) {
+    case NarrativeKind::Unreliable: bottom = "IS SLIPPING";     color = SDL_Color{ 200, 140,  40, 255 }; break;
+    case NarrativeKind::Breakdown:  bottom = "HAS BROKEN DOWN"; color = SDL_Color{ 190,  60,  50, 255 }; break;
+    case NarrativeKind::Stable:     break;
+    }
+
+    SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, 215);
+    SDL_RenderFillRect(m_renderer, &kSceneArea);
+    SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+
+    constexpr float scale = 3.0f;
+    SDL_SetRenderDrawColor(m_renderer, 255, 250, 235, 255);
+    const float centre = kSceneArea.x + kSceneArea.w * 0.5f;
+    const float middle = kSceneArea.y + kSceneArea.h * 0.5f;
+    m_text.drawLine(m_renderer, top,    centre - m_text.textWidth(top, scale) * 0.5f,    middle - 34.0f, scale);
+    m_text.drawLine(m_renderer, bottom, centre - m_text.textWidth(bottom, scale) * 0.5f, middle + 6.0f,  scale);
+}
+
+void Game::drawEndingPlaque() {
+    // Over the road at the end of a journey: how it ended, and how much is left to find.
+    if (!m_ending) return;
+    SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+    SDL_SetRenderDrawColor(m_renderer, 30, 22, 18, 205);
+    SDL_RenderFillRect(m_renderer, &kSceneArea);
+    SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_NONE);
+
+    const float centre = kSceneArea.x + kSceneArea.w * 0.5f;
+    float y = kSceneArea.y + 22.0f;
+    auto line = [&](const std::string& text, float scale, SDL_Color color) {
+        SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, 255);
+        m_text.drawLine(m_renderer, text, centre - m_text.textWidth(text, scale) * 0.5f, y, scale);
+        y += m_text.lineHeight(scale) + 6.0f;
+    };
+    line(m_endingIsNew ? "NEW ENDING FOUND!" : "ENDING", 2.5f, m_endingIsNew ? SDL_Color{ 255, 220, 90, 255 } : SDL_Color{ 235, 225, 200, 255 });
+    line(endingTitle(*m_ending), 1.5f, SDL_Color{ 255, 250, 235, 255 });
+    y += 6.0f;
+    line("Endings found: " + std::to_string(m_progress.endingsSeen()) + " of " + std::to_string(kEndingCount), 1.5f, SDL_Color{ 220, 210, 190, 255 });
+    line("Animations seen: " + std::to_string(m_progress.animationsSeen()) + " of " + std::to_string(Progress::animationTotal()), 1.5f, SDL_Color{ 220, 210, 190, 255 });
+    if (m_newDiscoveries > 0) line(std::to_string(m_newDiscoveries) + " new this journey", 1.5f, SDL_Color{ 255, 220, 90, 255 });
+    if (m_party.isAlive()) {
+        line(std::string(difficultyName(m_party.difficulty())) + " cleared!", 1.5f, SDL_Color{ 150, 220, 140, 255 });
+    }
 }
 
 void Game::renderTitleArt() {
@@ -661,14 +870,18 @@ void Game::render() {
     SDL_RenderClear(m_renderer);
 
     renderTop();
+    if (m_phase == Phase::NarratorShift) drawNarratorBanner();
+    if (m_phase == Phase::Ending) drawEndingPlaque();
     renderBottom();
 
     SDL_RenderPresent(m_renderer);
 }
 
 void Game::shutdown() {
+    if (m_renderer) saveProgress();   // (only once: the renderer is cleared below)
     m_log.stop();
     if (m_renderer) {
+        m_scene.releaseResources();
         SDL_DestroyRenderer(m_renderer);
         m_renderer = nullptr;
     }

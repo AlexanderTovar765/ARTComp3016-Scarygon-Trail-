@@ -19,7 +19,7 @@ public:
     const std::string& sessionId() const { return m_sessionId; }
     const std::string& filePath() const { return m_path; }
 
-    void logRunStart();
+    void logRunStart(const std::string& note = "new run");
     void logChoice(int day, const std::string& part, const std::string& variant, int choiceNumber,
                    const std::string& label, int food, int health, int sanity, int wagon,
                    const std::string& narrator, int alive);
