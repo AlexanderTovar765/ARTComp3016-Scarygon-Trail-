@@ -141,4 +141,4 @@ The game keeps running. Without irrKlang compiled in, AudioManager is a silent s
 
 ## 9. Declaration -EDIT
 
-Signed Generative AI Declaration form: `[YOU: attach as an appendix and link it here]`.
+Signed Generative AI Declaration form: https://liveplymouthac-my.sharepoint.com/:w:/r/personal/alexander_tovar_students_plymouth_ac_uk/Documents/Generative%20AI%20Tool%20declaration%20template%20-%20All%20-%20v1.0.docx?d=wd999a88252224706b1061d8d156a7792&csf=1&web=1&e=hTR9pb
