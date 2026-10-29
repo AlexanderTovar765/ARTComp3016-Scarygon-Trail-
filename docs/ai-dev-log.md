@@ -19,7 +19,7 @@ No image-generation tools were used. All artwork is drawn in code (rectangles, c
 | Gameplay balancing | Balance simulator and tuning of tolls and thresholds | Partnered, went through multiple variations to determine W/L ratios |
 | Level design support | Day structure and escalation of events | AI suggested, I decided the scope |
 
-## 3. Representative prompts (my real prompts, condensed)
+## 3. Representative prompts (my real prompts, sampled and condensed)
 
 | Stage | Prompt | What came back |
 |---|---|---|
@@ -61,6 +61,25 @@ No image-generation tools were used. All artwork is drawn in code (rectangles, c
 - **Verified:** 25 automated test groups (14,202 checks) pass with the silent audio stub and with real irrKlang; scripted headless playthroughs to every ending and "Play again"; screenshots read back from the renderer; balance simulation re-run (Random play 67.1% survival).
 - **Issue and fix:** a test expected a full party's health to drop by 3 per part. My arithmetic, and the AI's, was wrong; the average drops by 4 because frailer members take more damage. The test was corrected, not the code.
 
+### Week 6: playtest round 1 feedback, making the lying visible
+- **AI did:** Helped me work out why round 1 testers did not notice the narrator lying (both took the typos and wrong numbers for ordinary game bugs) and proposed ways to make it obvious without changing what choices do.
+- **I did:** Ran round 1 playtesting with 2 testers, recorded the results in `docs/playtesting.md`, chose which feedback to act on, and pushed the changes to GitHub.
+- **Change made (commit `b4a77f3`):** a coloured NARRATOR meter in the HUD (TRUSTWORTHY / SHAKY / LYING), a full-screen "the narrator is slipping / has broken down / has recovered" moment when the state changes, an end-of-day truth check naming one thing the narrator got wrong, and a lie counter on the ending screen (`src/LieTracker.*`).
+- **Verified:** 28 automated test groups pass (T24-T26 added for the lie tracker, including a test that it agrees with the real narrator on every event and result text); headless playthroughs and screenshots checked the new screens fit; the balance simulation was unchanged because the lying is presentation only.
+- **Issue and fix:** the ending screen showed the meter as TRUSTWORTHY at 1 sanity. The ending counts as a truth moment, so the display was corrected and the HUD, bars and member cards now agree.
+- **I decided:** the lying stays presentation only. The bracketed summary of what a choice did is always true, so the game never cheats the player.
+- **Outcome:** in round 2 one tester noticed the lying mechanic without being told.
+
+### Week 7: playtest round 2 feedback, difficulty and animations
+- **AI did:** Proposed the idea of Turning two pieces of round 2 feedback into a design: all testers rated difficulty 1 (too easy), and there was no reason to play again. GPT came up with the idea to add a difficulty slider and what balance report stats would become along with assisting in laying out code for the new animation screens.
+- **I did:** Ran round 2 with 2 new testers plus one returning from round 1, wrote subsequent code for the new animations in game and the difficulty slider with assistance from GPT as specified, and pushed the work (commit `a8f589a`).
+- **Change made:** `Easy / Normal / Hard` (`src/Difficulty.*`) that change only numbers, 15 event scenes and 20 choice reactions drawn in code (`src/SceneActors.*`), a remembered count of animations seen (of 35) and endings found (of 7) so there is a reason to replay, and a pixel-art render of the scene picture.
+- **Verified:** 33 test groups (22,238 checks) pass; the balance simulator was extended to all three difficulties and the report regenerated (Random play survives 88.9% / 48.3% / 5.8% on Easy / Normal / Hard); three scripted headless playthroughs reached the ending on each difficulty; screenshots were read back to check every scene and reaction.
+- **Issue and fix:** the first Easy and Hard settings were wrong (Easy let nearly everyone through, Hard was close to impossible even for careful play). A parameter sweep in the simulator found settings that fit the targets.
+- **Issue and fix:** the first pixel-art version made thin shapes disappear (hills, people, wagon wheels), because SDL's one-pixel lines and thin rectangles fall between pixels at low resolution. They are now drawn from square blocks, found from screenshots.
+- **Issue and fix:** the real irrKlang test build crashed about 1 run in 10 at exit on the Linux test machine. valgrind showed a use-after-free inside irrKlang's own thread, not game code, so I documented it in `docs/test-cases.md` instead of changing the game.
+- **I decided:** difficulty rules, story and the narrator's lying are separate. Only numbers change between levels, so one set of events and tests covers all three.
+
 
 ## 5. Problems found in AI output (and what that taught me)
 
@@ -74,7 +93,7 @@ No image-generation tools were used. All artwork is drawn in code (rectangles, c
 | Scene art overflowed its frame | Screenshots | Clip rectangle |
 
 
-## 6. How I verified AI output -Maybe EDIT
+## 6. How I verified AI output
 
 1. Compiled everything with warnings on (`-Wall -Wextra`) and fixed warnings.
 2. Wrote and ran automated tests (`tests/logic_tests.cpp`) for rules, loaders, text fit, settings, logging and audio.
@@ -83,9 +102,7 @@ No image-generation tools were used. All artwork is drawn in code (rectangles, c
 5. Ran the game myself in Visual Studio 2022 and checked it plays. 
 6. Held Playtesting sessions for feedback.
 
-## 7. Repository evidence -EDIT
-
-Early history (from my repository):
+## 7. Repository evidence
 
 | Commit | Message |
 |---|---|
@@ -95,6 +112,11 @@ Early history (from my repository):
 | `123164a` | Update Visual Studio project, add CMake support, bundle SDL3 |
 | `958ec60` | Update README status for Week 3 |
 | `1b3f873` | Add Days 2-3, sanity-driven narrator, wagon scene art, balance simulator and playtesting docs |
+| `8a817cf` | 18 Oct | Add PartyMember and Observer pattern: named family, threshold warnings, desperate event variants |
+| `c18e610`, `eb41fe3`, `5442df8`, `03cfc81`, `bf5bb5d`, `3038a1c` | 19-22 Oct | My own edits to Button, Conditions, Effects and Event (see AI Development Log for what I changed by hand). `3038a1c` is the build used for playtest round 1. |
+| `b4a77f3` | 25 Oct | Make the lying narrator noticeable: trust meter, narrator-shift screen, end-of-day truth check. **Response to round 1** (players did not notice the narrator lying). This is the build used for round 2. |
+| `a8f589a` | 28 Oct | Round 2 feedback: add Easy/Normal/Hard difficulty, per-event scenes, per-choice reaction animations, remembered discoveries and pixel-art rendering. **Response to round 2** (difficulty rated 1, no reason to replay). |
+| `8fe6f85` | 28 Oct | Update balance-report.md (results for all three difficulties) |
 
 
 ## 8. Ownership: what I can explain
