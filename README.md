@@ -91,15 +91,15 @@ Playthroughs differ because the choices lead to different stats, different despe
 
 | Title | How to play |
 |---|---|
-| (<img width="956" height="636" alt="Title Screen" src="https://github.com/user-attachments/assets/1c51d90e-9d1a-4da6-93ba-17830b771643" />) |(<img width="958" height="636" alt="How To Play" src="https://github.com/user-attachments/assets/9781f0b9-881b-47d9-96d5-f134f952fc66" />) |
+| (<img width="952" height="629" alt="Screenshot 2026-10-29 095827" src="https://github.com/user-attachments/assets/fbb68e28-b91a-43db-ab7a-10cd31ad0d7c" />) |(<img width="949" height="631" alt="Screenshot 2026-10-29 095900" src="https://github.com/user-attachments/assets/f99f39f9-e346-457a-802f-dc5c8ca2e7bd" />) |
 
 | An event | A result with a warning |
 |---|---|
-| (<img width="954" height="636" alt="Event Screen" src="https://github.com/user-attachments/assets/b2d03f1b-da09-4712-8f17-e6e6e9ec2b56" />) |(<img width="957" height="640" alt="Result Screen" src="https://github.com/user-attachments/assets/e370339f-ea8d-4d8b-8a49-aadd1690265e" />) |
+| (<img width="949" height="625" alt="Screenshot 2026-10-29 095939" src="https://github.com/user-attachments/assets/f8a112e0-6d29-4590-b23c-ac166eb7123a" />) |(<img width="944" height="626" alt="Screenshot 2026-10-29 100032" src="https://github.com/user-attachments/assets/12ed57da-6c14-4b4f-9176-bdd7c6dfc082" />) |
 
 | Ending summary |
 |---|
-| (<img width="958" height="637" alt="Ending Screen" src="https://github.com/user-attachments/assets/18f0df4b-318c-4da0-8b6d-000cba7b6361" />) |
+| (<img width="938" height="619" alt="Screenshot 2026-10-29 100107" src="https://github.com/user-attachments/assets/71fab3ca-994a-4e38-8563-114864e7996c" />) |
 
 
 ## 5. Dependencies
