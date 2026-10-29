@@ -109,11 +109,11 @@ Any playthrough of the game can lead to a merriad of different results, no one c
 I have used ChatGPT as I mentioned in my AI log. Although it was mentioned in my project proposal, I have noted how I have used it in my work on this project. For instance, AI helped in writing various parts of my C++ code, documentation, the text of the event, various types of tests, balance simulator, and sound script. I took important decisions about design such as humorous horror tone, split-panel layout, three-day framework, and that unreliable narration impacts just the presentational aspect but does not affect gameplay. For example, I had balance simulator showing 99.9% survival with random gameplay, so I had the idea to add penalties for tolls and starvation. One of the tests also predicted that the wrong health is going to be decreased because of incorrect arithmetic, so I had to fix the test rather than the game code. Lastly, I have made the unreliable narration that shifts at least one word.
 My contributions can be tracked in commits like 587643e, bbf2a29, and 1b3f873 where I worked on the event loader, Day 1 events, Days 2 and 3 with the narrator and the balance simulator. I have checked the work done by AI by compiling
 
-The full account is in the AI Development Log (section 7). The signed Generative AI Declaration is included as an appendix: PLACEHOLDER: link or attach the signed form.
+The full account is in the AI Development Log (section 7). The signed Generative AI Declaration is included as an appendix: https://liveplymouthac-my.sharepoint.com/:w:/r/personal/alexander_tovar_students_plymouth_ac_uk/Documents/Generative%20AI%20Tool%20declaration%20template%20-%20All%20-%20v1.0.docx?d=wd999a88252224706b1061d8d156a7792&csf=1&web=1&e=hTR9pb
 
 See [docs/ai-dev-log.md](docs/ai-dev-log.md) for the AI tools used, categories of use, example prompts, the verification process, and repository evidence.
 
-## 7. Game programming patterns-ASK CLAUDE FOR PLACEHOLDER
+## 7. Game programming patterns
 
 | Pattern | Where | Why |
 |---|---|---|
@@ -123,8 +123,13 @@ See [docs/ai-dev-log.md](docs/ai-dev-log.md) for the AI tools used, categories o
 | Composition | `Party` owns four `PartyMember` objects | The party is made of its members, and health is derived from them |
 | Data-driven content | `Trail::loadFromFile` reads `data/events.txt` | Events can be written and edited without recompiling |
 | Pimpl idiom | `AudioManager::Impl` | Keeps irrKlang out of the header. The same class is a silent stand-in when irrKlang is not built in |
+| Parameter object (rules table) | `DifficultyRules` and `rulesFor(Difficulty)` in `Difficulty.cpp`, used by `Party::rules()` and `Party::adjusted()` | Easy, Normal and Hard are one struct of numbers. `Party` never branches on the difficulty name, so adding a fourth level means adding one row |
+| Value-to-name mapping | `SceneId` / `ActionId` enums with `sceneName` / `parseScene` and `actionName` / `parseAction` in `Animations.cpp` | The data file uses readable names, the code uses enums, and tests check every name round-trips |
+| Dispatch on an enum | `stage::drawSceneActor` and `stage::drawAction` in `SceneActors.cpp` | Each scene and reaction is one small drawing function chosen by its ID, so adding an animation does not touch the others |
+| Persistence with defensive loading | `Progress::load` / `save` (`save/progress.txt`) | Progress survives restarts, and a missing, damaged or read-only file is ignored, in keeping with the "no corrupted file can crash it" requirement |
+| Off-screen render and scale (pixel art) | `SceneRenderer::beginPixelPass` / `endPixelPass` | The scene is drawn into a small texture and scaled up with no smoothing, so every shape becomes chunky pixels while text is drawn afterwards at full sharpness |
 
-The game’s central joke is that the narrator gets less trustworthy as sanity drops. The State pattern lets Game swap one narrator object (Stable, Unreliable or Breakdown) without any if chains, and it keeps the lying confined to the presentation, so the rules stay fair. The Observer pattern suits a game where the family’s condition keeps changing, because Party can announce a low-food warning or a death without knowing who is listening, so new reactions can be added without touching the party’s rules.
+The newer features follow the same idea: difficulty is a table of numbers `Party` reads, and each event's scene and each choice's reaction animation are chosen by name from `events.txt`, so balance and content can change without rewriting the game's logic.
 
 ## 8. Game mechanics and how they are coded
 
