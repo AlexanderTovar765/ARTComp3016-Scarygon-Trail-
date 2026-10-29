@@ -75,13 +75,17 @@ Three playable days. Each day has 5 parts (Dawn, Mid-Morning, Noon, Evening, Nig
 
 - **A family of four** (Ma, Pa, Junior, Granny) with portraits in the top panel. Each has their own health and can fall ill or die, and some choices hit one person only. The Health bar is the family average, and the dead count as 0.
 - **Resources:** Food, Health, Sanity and Wagon, shown as bars. The trail takes a toll after every part.
+- **Difficulty:** Easy, Normal or Hard, chosen on the title screen (and again on the ending screen) and shown as a tag beside the narrator meter. The levels change only numbers: starting food, how fast the trail wears the family down, and how hard bad choices hit. The story is identical on all three.
 - **Sanity changes how trustworthy the game is:** Stable above 60, Unreliable from 30 to 59 (some words and HUD numbers are wrong), Breakdown below 30 (numbers hidden, lies freely). Only the presentation lies. What choices do, and the "what happened" summary, are always true.
+- **The lying is made visible:** a NARRATOR meter in the HUD (TRUSTWORTHY / SHAKY / LYING), a screen when the narrator slips, breaks down or recovers, an end-of-day truth check naming something it got wrong, and a lie count at the ending.
 - **Desperate events:** when food, the wagon or health drops into danger, a warning appears and a harsher version of a later event can replace the normal one.
+- **Animated scenes:** every event has its own scene in the top panel (a map seller, a deer, a river crossing, a ritual circle...) and every choice plays its own reaction when chosen, drawn in code in a pixel-art style. There are 15 scenes and 20 reactions.
+- **Discoveries:** the title screen counts the animations seen (of 35) and endings found (of 7), and notes which difficulties have been cleared. This is saved between runs, so each new journey can show something not seen before.
 - **Screens:** title, how to play, events, results, day summaries and an ending summary showing who survived and how far the family got.
-- **Sound:** ambience that follows the narrator state, plus effects for choices, warnings and deaths.
-- **Ending:** the run ends if the whole family dies, or Sanity or the Wagon reaches 0, or the three days are completed.
+- **Sound:** ambience that follows the narrator state, plus effects for choices, warnings and deaths. Optional at build time.
+- **Ending:** the run ends if the whole family dies, or Sanity or the Wagon reaches 0, or the three days are completed. There are seven different endings, depending on who survived and how the journey went.
 
-Any playthrough of the game can lead to a merriad of different results, no one combination of choices can provide identical stats. Its this idea along with the fun prompts that call for the player to do a 2nd run and see another outcome.
+Playthroughs differ because the choices lead to different stats, different desperate events, different narrator states and different endings, and each run can show new animations the player has not seen yet. Together with the three difficulty levels, that is the reason to play a second time.
 
 ## 4. Sample screens
 
@@ -136,12 +140,16 @@ The newer features follow the same idea: difficulty is a table of numbers `Party
 | Mechanic | How it works | Code |
 |---|---|---|
 | Day and part progression | `Trail` tracks the current day and part; 15 parts in total, then the trail ends | `Trail::advance`, `Trail::getEvent` |
-| Choices and effects | Each choice carries `Effects` (food, health, sanity, wagon and an optional member). `Party::apply` applies them, clamped to 0-100 | `Effects`, `Party::apply` |
-| The trail's toll | After every part the party eats, sanity and the wagon wear, every living member loses health (scaled by frailty), and starvation hurts at 0 food | `Party::advanceTime` |
+| Choices and effects | Each choice carries `Effects` (food, health, sanity, wagon and an optional member). `Party::adjusted` scales them for the chosen difficulty, then `Party::apply` applies them, clamped to 0-100 | `Effects`, `Party::adjusted`, `Party::apply` |
+| The trail's toll | After every part the party eats, sanity and the wagon wear, every living member loses health (scaled by frailty), and starvation hurts at 0 food. The amounts come from the difficulty's rules | `Party::advanceTime`, `Party::rules` |
 | Individual members | Health out of 100 and a frailty percentage; Ill below 40, Dead at 0; each death costs the survivors sanity | `PartyMember`, `Party::applyGrief` |
 | Targeted choices | A choice with `member = Pa` hits only that member | `Effects::member` |
 | Desperate events | An event with `requires = LowFood` replaces the normal event while that condition is active | `ThresholdWatcher`, `Trail::getEvent` |
-| Unreliable narration | Text swaps and HUD jitter depend on a per-screen seed, so nothing flickers. The "what happened" line is always true | `NarrativeState`, `Game::onEventChoice` |
+| Unreliable narration | Text swaps and HUD jitter depend on a per-screen seed, so nothing flickers. The "what happened" line is always true. A NARRATOR meter, a shift banner and an end-of-day truth check show the player when it is lying | `NarrativeState`, `LieTracker`, `Game::onEventChoice` |
+| Difficulty | Easy, Normal and Hard are three rows of numbers (starting food, daily toll, and how much damage and help choices do). Changing the level only changes which row `Party` reads, so the story and events never change | `Difficulty.cpp` (`rulesFor`), `Game::cycleDifficulty` |
+| Scenes and reactions | Each event names a scene and each choice names a reaction in `events.txt`. The scene is drawn while the event is on screen, and the reaction plays on the result screen. The picture is drawn small and scaled up for the pixel-art look | `Animations.cpp`, `SceneActors.cpp`, `SceneRenderer::drawStage` |
+| Discoveries and replay | The game records which scenes, reactions and endings have been seen and which difficulties have been cleared, and shows the totals on the title screen. Saved between runs and ignored safely if the file is missing or damaged | `Progress` (`markScene`, `markAction`, `markEnding`, `classify`), `save/progress.txt` |
+| Endings | The finish is classified into one of seven endings from the survivors and the final sanity and wagon, and the ending screen says whether it is new | `Progress::classify`, `Game` ending screen |
 | Sound | Ambience follows the narrator state; effects play for choices, warnings and deaths | `AudioManager` |
 | Playtest log | Optional anonymous CSV of the choices made | `PlaytestLog`, `Settings` |
 
@@ -193,55 +201,72 @@ classDiagram
 
 Old Design: <img width="446" height="587" alt="Screenshot 2026-10-22 093603" src="https://github.com/user-attachments/assets/8f8d3295-d754-4473-a2c7-cbcd432fc2f6" />
   
-
 ## 10. Exception handling and test cases
 
 The code does not use C++ exceptions. Instead it validates input and reports problems, so bad data cannot crash the game:
 
-- **Event file:** a missing or empty file shows a clear message. A malformed event is skipped with a warning that names the line. Text and numbers are cleaned (byte-order marks, Windows line endings and curly quotes are handled, and out-of-range effects are clamped).
+- **Event file:** a missing or empty file shows a clear message. A malformed event is skipped with a warning that names the line. Text and numbers are cleaned (byte-order marks, Windows line endings and curly quotes are handled, and out-of-range effects are clamped). An unknown `scene` or `action` name only produces a warning, and the event still loads.
 - **Settings file:** a missing file is fine. Bad lines are reported and defaults are used.
+- **Progress file:** a missing, damaged or read-only `save/progress.txt` is ignored. The game starts with no discoveries on Normal difficulty and never crashes.
 - **Audio:** missing irrKlang, no sound device, or a missing sound file never stops the game.
 - **Playtest log:** if the log file cannot be created, logging is switched off quietly.
+- **Rendering:** if the off-screen texture for the pixel-art picture cannot be created, the scene is drawn normally instead.
 - **Input:** keys that match no button are ignored.
 
-**Tests:** `tests/logic_tests.cpp` has 25 test groups (14,202 checks), all passing, with the silent audio stub and with the real irrKlang engine. Details are in [docs/test-cases.md](docs/test-cases.md). The balance simulation (20,000 games per strategy) is in [docs/balance-report.md](docs/balance-report.md).
+**Tests:** `tests/logic_tests.cpp` has 35 test groups (22,238 checks), all passing, with the silent audio stub and with the real irrKlang engine. They now also cover the lie tracker, difficulty rules and scaling, animation names, the shipped events' scenes and actions, and the progress file. Details are in [docs/test-cases.md](docs/test-cases.md). The balance simulation (20,000 games per strategy on each of the three difficulties) is in [docs/balance-report.md](docs/balance-report.md).
 
 To run the tests (from the repository root, because they read `data/` and `assets/audio/`):
 
-```
-cmake --build build --target logic_tests
-ctest --test-dir build --output-on-failure
-```
+    cmake --build build --target logic_tests
+    ctest --test-dir build --output-on-failure
+    
+## 11. Playtesting evidence and reflection
 
-## 11. Playtesting evidence and reflection-COME BACK TO
+Evidence (session log, observation notes, questionnaire results) is in [docs/playtesting.md](docs/playtesting.md). Two structured rounds were run, and each round's feedback led to a code change linked to a commit (table below). 
 
-Evidence (session log, observation notes, questionnaire results) is in [docs/playtesting.md](docs/playtesting.md). PLACEHOLDER: link the playtest folder (for example `docs/playtest/`) once it is in the repository, and link the GitHub Issues that came from tester feedback.
+### Playtesting reflection
 
-### Playtesting reflection-COME BACK TO
+- **Who participated:** 4 different people (A, B, C and D, anonymised: friends and one classmate) over 5 sessions. Tester E was the same person as Tester A, returning to check whether the round 1 fix worked. Round 1 was on 23 October (2 testers) and round 2 on 28-29 October (3 sessions).
+- **What was tested:** one complete playthrough each at their own pace, with no help. I filled in an observation sheet while they played, then they completed the questionnaire alone, and I asked for their best moment and the first thing they would change. Round 1 tested the original build (`3038a1c`). Round 2 tested the build with the visible narrator changes (`b4a77f3`).
+- **Feedback received:**
+  - Everyone understood the game without help (5/5 from all five sessions) and liked its quirky style (fun averaged 3.8/5).
+  - **Round 1:** both testers scored 2/5 on "I noticed when the game started lying to me", so they took the typos and wrong numbers for ordinary behaviour.
+  - **Round 2:** noticing the lying rose to 4, 5 and 5 (average 4.7) after the narrator was made visible. One tester noticed the mechanic without being told.
+  - **Difficulty:** all five sessions rated it 1, "too easy", including the one tester who did not reach the end.
+  - **Replay:** "I would play it again" averaged 3.2/5, and testers said there was little reason to play a second time. The jokes divided people (averaging 2.8/5).
+- **Changes implemented:**
 
-- **Who participated:** PLACEHOLDER: number of testers, who they were (anonymised) and when.
-- **What was tested:** PLACEHOLDER
-- **Feedback received:** PLACEHOLDER: the main themes.
-- **Changes implemented:** PLACEHOLDER: each change with its issue number and commit.
-- **Remaining limitations:** PLACEHOLDER
+| Feedback | Change | Commit |
+|---|---|---|
+| Round 1: the lying was not noticed | A NARRATOR meter, a "narrator is slipping" screen, an end-of-day truth check naming something it got wrong, and a lie count at the ending | `b4a77f3` |
+| Round 2: too easy (all rated 1) | Easy / Normal / Hard difficulty (Random play now survives about 89% / 48% / 6%) | `a8f589a` |
+| Round 2: no reason to replay | A new scene for every event and a reaction for every choice, a count of animations and endings discovered, and a pixel-art look | `a8f589a` |
+
+- **Remaining limitations:**
+  - Only 4 different people tested the game, all friends or classmates, so the results show trends and not statistics.
+  - **The difficulty levels, animations and discoveries have not been playtested.** Round 2 ran on the build before them, so I cannot yet show that they fixed "too easy" or "no reason to replay". The balance simulator is my evidence for difficulty until a third round.
+  - The jokes divided testers, and the humour was not changed.
+  - With more time I would add more days and another character and stat, and improve the graphics further, though this was my first use of SDL3.
 
 ## 12. Further details
 
 - **Project structure**
 
 ```
-src/      C++ source (Game, Party, PartyMember, observers, Trail, NarrativeState, renderers, audio, settings, playtest log)
+src/      C++ source (Game, Party, PartyMember, observers, Trail, NarrativeState, LieTracker, Difficulty, Animations, SceneActors, Progress, renderers, audio, settings, playtest log)
 tests/    logic_tests.cpp, automated tests
-tools/    balance_sim.cpp (plays thousands of games to check difficulty), make_sounds.py (synthesises the sounds), get-irrklang.ps1
+tools/    balance_sim.cpp (plays thousands of games on each difficulty to check balance), make_sounds.py (synthesises the sounds), get-irrklang.ps1
 vendored/ bundled SDL3 headers and x64 libraries (irrKlang is downloaded here by the script, not committed)
 assets/   audio/ (generated WAV files)
-data/     events.txt (loaded at runtime, format explained at the top of the file) and settings.txt
-docs/     AI Development Log, balance report, test cases, playtesting
+data/     events.txt (loaded at runtime, including each event's scene and each choice's action; format explained at the top of the file) and settings.txt
+docs/     proposal, AI Development Log, balance report, test cases, playtesting
+save/     progress.txt, written by the game at runtime (not committed)
 ```
 
-- **Anonymous playtest log:** off by default. It can be turned on in `data/settings.txt` or with `L` on the title screen. It records the choices made and the result, with no names or personal data.
+- **Anonymous playtest log:** off by default. It can be turned on in `data/settings.txt` or with `L` on the title screen. It records the choices made, the result and the difficulty, with no names or personal data.
+- **Remembered progress:** the game writes `save/progress.txt` (chosen difficulty, number of runs, which animations and endings have been seen, which difficulties have been cleared). It contains no personal data, is optional, and can be deleted at any time to reset discoveries.
 - **Git evidence:** PLACEHOLDER: add a screenshot of your GitHub Insights contribution graph and of key milestone commits.
 
-## 14. Evaluation-COME BACK TO
+## 13. Evaluation-COME BACK TO
 
 PLACEHOLDER: a brief evaluation in your own words: what you achieved, what you would do differently knowing what you know now, and what you are proudest of. Points to consider: what playtesting taught you, how heavy AI use changed your role, and what you would add with more time.
