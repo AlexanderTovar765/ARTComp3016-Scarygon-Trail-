@@ -58,9 +58,16 @@ Week 2 proposal: https://docs.google.com/document/d/1e3urBafL8XUcumxg3YoX4mpzwOV
 | A long trail with `TrailNode` objects | 3 days x 5 parts; `Trail` stores events by (day, part) | CW1 is 30% of the module, so the content was scaled. A map keyed by slot was simpler than linked nodes |
 | Party members that can be sick, cursed, lost or dead | Healthy, Ill or Dead | "Cursed" was cut for scope. Individuality comes from frailty and choices that target one member |
 | Scrolling text in the bottom panel | Wrapped text that fits the panel, checked on load | Scrolling added little for short events, and fit is tested |
-| ChatGPT as the AI tool | Claude | PLACEHOLDER: say why you used Claude instead |
 | irrKlang to be requested if pursued | irrKlang used for sound | irrKlang is listed as permitted in the brief; it is optional at build time |
-| PLACEHOLDER: any other change, especially ones driven by playtesting | | |
+| The top panel would show "the wagon, the characters sprite, icons of inventory" | Everything is drawn in code from rectangles, circles and lines, with no sprites or image files. There is no inventory: the four stats (Food, Health, Sanity, Wagon) are the resources | No image assets to source, cite or approve, and the scaled-down scope had no room for an inventory system. The look was made deliberately retro after playtesting (see below) |
+| "2-4 buttons" per event | Always exactly four choices | A fixed layout is simpler to build and test, and every event gives a real risk/reward spread |
+| A wagon "in motion on the map" | The wagon is parked on the road during events (drawing across the screen on the title screen only), and a progress strip of 15 dots shows how far through the journey the player is | A map needs far more art and data than the scope allowed, and a progress strip tells the player where they are at a glance |
+| Unreliable narration only (the less sane you are, the less reliable the game) | Same mechanic, plus a visible NARRATOR meter, a "narrator is slipping" screen, an end-of-day truth check and a lie count at the ending | **Playtest round 1:** both testers took the lying for ordinary bugs. The lying stays presentation only, so the game never cheats the player |
+| No difficulty settings | Easy, Normal and Hard (`src/Difficulty.*`), changing only numbers (food, daily toll, harm from choices) | **Playtest round 2:** every tester rated difficulty 1 (too easy). Levels were tuned with the balance simulator (see `docs/balance-report.md`) |
+| One fixed oxen picture for the whole game | A scene for each event (15) and a reaction animation for each choice (20), drawn in code, rendered in a chunky pixel-art style | **Playtest round 2:** testers saw no reason to play again. The scene picture is rendered small and scaled up for a 2D pixel look the player asked for |
+| No save or progress system | The game remembers animations seen (of 35), endings found (of 7) and which difficulties were cleared in `save/progress.txt` | Gives a reason to replay without changing the rules of any single run. It is optional: a missing or unwritable file is harmless |
+| Roadmap: one playtest round in Week 5 | Two rounds (late Oct), each followed by a change driven by the feedback | One round did not show whether the first fix worked, so a second was added (see section 12) |
+| Sound was an "if looking later" idea | Ambient music that follows the narrator's state, plus effects, synthesised by `tools/make_sounds.py` | Avoids sourcing or licensing audio. Optional at build time (the game is silent without irrKlang) |
 
 ## 3. Gameplay description
 
