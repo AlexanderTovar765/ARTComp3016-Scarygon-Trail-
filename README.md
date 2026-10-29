@@ -248,7 +248,7 @@ Evidence (session log, observation notes, questionnaire results) is in [docs/pla
   - The jokes divided testers, and the humour was not changed.
   - With more time I would add more days and another character and stat, and improve the graphics further, though this was my first use of SDL3.
 
-## 12. Further details
+## 12. Further details-COME BACK TO
 
 - **Project structure**
 
@@ -267,6 +267,16 @@ save/     progress.txt, written by the game at runtime (not committed)
 - **Remembered progress:** the game writes `save/progress.txt` (chosen difficulty, number of runs, which animations and endings have been seen, which difficulties have been cleared). It contains no personal data, is optional, and can be deleted at any time to reset discoveries.
 - **Git evidence:** PLACEHOLDER: add a screenshot of your GitHub Insights contribution graph and of key milestone commits.
 
-## 13. Evaluation-COME BACK TO
+## 13. Evaluation
 
-PLACEHOLDER: a brief evaluation in your own words: what you achieved, what you would do differently knowing what you know now, and what you are proudest of. Points to consider: what playtesting taught you, how heavy AI use changed your role, and what you would add with more time.
+**What I achieved.** I built The Scarygon Trail, a complete comedic-horror survival game in C++ and SDL3: three days, 20 events with four choices each, a family of four with individual health, a narrator that becomes less trustworthy as sanity falls, three difficulty levels, an animated scene for every event and a reaction for every choice, and seven endings. It is data-driven (events live in `data/events.txt`), it validates its files instead of crashing, and it has 35 automated test groups (22,238 checks) plus a balance simulator. The State and Observer patterns from my proposal are both used for real jobs, not added for show. Most of the proposal was delivered, and the places it changed are recorded in section 2.
+
+**What playtesting taught me.** My own testing told me the game worked. Players told me whether it was good. In round 1 neither tester noticed the narrator lying, because I had made the best mechanic in the game too subtle to see, so I added the narrator meter, the shift screen and the end-of-day truth check. By round 2 the testers who played noticed it, and one noticed it without being told. Round 2 then showed a problem I could not see myself: every tester rated the difficulty 1 and there was no reason to replay. I had balanced the game with a simulator that played well-defined strategies, and I had trusted its numbers too much. Real players are not the strategies I wrote, so I added difficulty levels and rebuilt the pictures around the player's choices. I was surprised at the efficiency new players were at completing the game without any help, a testament to how air tight I tried to make the game.
+
+**What I would do differently.** I would playtest much earlier. Both of my biggest changes came from feedback that I could have had a week sooner with a rough build. I would also write the Observer and Difficulty ideas into the proposal with firm numbers, so the first balance pass was not guesswork. I would test the final build with a third group of players, because the difficulty levels and animations were added after the last round and have not been playtested.
+
+**What I am proudest of.** I am most proud of the final game. Having it as an exe file will mean I can hold onto it for years afterward and I'm excited to show and send it to family and friends as a working program that I created.
+
+**With more time.** More days and events, another stat and character so the choices have more to trade off, better art and animation, and a larger and more varied set of playtesters. I would also add settings for sound and difficulty in-game, and an event editor to speed up writing content.
+
+Overall, having AI assist in the full process of the game was a bizarre idea at first, but I see now its true intention is to make as large a game as possible in a short time. I am content with my usage of AI but am more elated by the final product.
