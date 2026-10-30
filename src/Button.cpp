@@ -2,7 +2,7 @@
 #include <algorithm>
 
 namespace {
-    constexpr float kLabelScale   = 2.0f;  // 8px font drawn at 16px
+    constexpr float kLabelScale   = 2.0f;  // This part of the code is for setting the 8px font drawn at 16px.
     constexpr float kLabelPadding = 10.0f;
     constexpr int   kMaxLabelLines = 2;
 }
@@ -16,7 +16,7 @@ bool Button::contains(float x, float y) const {
 }
 
 void Button::draw(SDL_Renderer* renderer, const TextRenderer& text, int number) const {
-    // Background: slightly brighter when the mouse is over it.
+    // This part of the code is for the background: it makes it slightly brighter when the mouse is over it.
     if (m_hovered) {
         SDL_SetRenderDrawColor(renderer, 250, 235, 190, 255);
     } else {
@@ -24,7 +24,7 @@ void Button::draw(SDL_Renderer* renderer, const TextRenderer& text, int number) 
     }
     SDL_RenderFillRect(renderer, &m_rect);
 
-    // Border: doubled up when hovered so it reads without relying on colour alone.
+    // This part of the code is for the border: it doubles up when hovered so it reads without relying on colour alone.
     SDL_SetRenderDrawColor(renderer, 90, 70, 50, 255);
     SDL_RenderRect(renderer, &m_rect);
     if (m_hovered) {
@@ -32,7 +32,7 @@ void Button::draw(SDL_Renderer* renderer, const TextRenderer& text, int number) 
         SDL_RenderRect(renderer, &inner);
     }
 
-    // Label, wrapped to the button width and centred vertically.
+    // This part of the code is for the label, it wraps to the button width and centred vertically.
     const std::string label = std::to_string(number) + ". " + m_label;
     const float maxWidth = m_rect.w - 2.0f * kLabelPadding;
     const int lineCount = std::min(static_cast<int>(text.wrap(label, maxWidth, kLabelScale).size()),
