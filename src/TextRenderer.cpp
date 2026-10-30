@@ -23,7 +23,7 @@ void TextRenderer::drawLine(SDL_Renderer* renderer, const std::string& text,
                             float x, float y, float scale) const {
     if (!renderer || text.empty()) return;
 
-    // The debug font is always 8x8, so enlarge it by scaling the renderer, then
+    // This part of the code is for the debug font is always 8x8, so enlarge it by scaling the renderer, then
     // divide the position by the scale so it still lands at (x, y) on screen.
     SDL_SetRenderScale(renderer, scale, scale);
     SDL_RenderDebugText(renderer, x / scale, y / scale, text.c_str());
@@ -39,7 +39,7 @@ std::vector<std::string> TextRenderer::wrap(const std::string& text, float maxWi
     std::string current;
 
     while (words >> word) {
-        // A single word longer than a whole line can never fit, so hard-break it.
+        // This part of the code is for a single word longer than a whole line can never fit, so hard-break it.
         while (static_cast<int>(word.size()) > maxChars) {
             if (!current.empty()) {
                 lines.push_back(current);
@@ -71,7 +71,7 @@ int TextRenderer::drawWrapped(SDL_Renderer* renderer, const std::string& text,
     if (maxLines > 0 && static_cast<int>(lines.size()) > maxLines) {
         lines.resize(maxLines);
 
-        // Mark the cut-off so truncated text is obvious rather than silently clipped.
+        // This part of the code is for the mark the cut-off so truncated text is obvious rather than silently clipped.
         const size_t maxChars = static_cast<size_t>(maxCharsPerLine(maxWidth, scale));
         std::string& last = lines.back();
         if (maxChars > 3 && last.size() + 3 > maxChars) last.resize(maxChars - 3);
