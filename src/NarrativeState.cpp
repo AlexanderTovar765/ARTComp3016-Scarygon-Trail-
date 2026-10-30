@@ -6,14 +6,14 @@
 #include <vector>
 
 namespace {
-    // ---- Tuning knobs --------------------------------------------------------
+    // This part of the code is for the Tuning knobs 
     constexpr unsigned kUnreliableSwapChance = 35;   // % of swappable words replaced
     constexpr unsigned kBreakdownSwapChance  = 85;
     constexpr int      kUnreliableJitter     = 10;   // HUD numbers drift by up to +/- this
     constexpr int      kBreakdownJitter      = 30;
     constexpr std::size_t kMaxTextChars      = 220;  // keeps lying text inside the panel
 
-    // Small deterministic hash so the same (seed, position) always gives the same answer.
+    // This part of the code is the small deterministic hash so the same (seed, position) always gives the same answer.
     std::uint32_t mix(std::uint32_t x) {
         x ^= x >> 16; x *= 0x7feb352dU;
         x ^= x >> 15; x *= 0x846ca68bU;
@@ -21,7 +21,7 @@ namespace {
         return x;
     }
 
-    unsigned roll(unsigned seed, unsigned salt) {  // 0..99
+    unsigned roll(unsigned seed, unsigned salt) {  // goes from 0 to 99
         return mix(seed * 2654435761U + salt * 40503U + 17U) % 100U;
     }
 
@@ -64,7 +64,7 @@ namespace {
         return nullptr;
     }
 
-    // Keep the original's capitalisation: "Wagon" -> "Hearse", "WAGON" -> "HEARSE".
+    // This part of the code keeps the original's capitalisation: "Wagon" -> "Hearse", "WAGON" -> "HEARSE".
     std::string matchCase(const std::string& original, std::string replacement) {
         const bool allCaps = original.size() > 1 &&
             std::all_of(original.begin(), original.end(),
@@ -77,7 +77,7 @@ namespace {
         return replacement;
     }
 
-    // Replaces some swappable words with wrong ones. Each word has 'chancePercent' of being
+    // This part of the code replaces some swappable words with wrong ones. Each word has 'chancePercent' of being
     // swapped, but if the dice pick none, one is swapped anyway: in a lying state the
     // text always lies at least once (when it has anything to lie about).
     std::string swapWords(const std::string& text, unsigned seed, unsigned chancePercent) {
@@ -121,14 +121,14 @@ namespace {
         return out;
     }
 
-    // Moves a HUD value by a repeatable random amount, staying within 0..100.
+    // This part of the code moves a HUD value by a repeatable random amount, staying within 0..100.
     int jitter(int actual, int range, Stat stat, unsigned seed) {
         const std::uint32_t r = mix(seed * 40503U + static_cast<unsigned>(stat) * 7919U + 11U);
         const int offset = static_cast<int>(r % static_cast<unsigned>(2 * range + 1)) - range;
         return std::max(0, std::min(100, actual + offset));
     }
 
-    // ---- The three states ----------------------------------------------------
+    // This section of the code is for the three states 
     class StableNarration : public NarrativeState {
     public:
         NarrativeKind kind() const override { return NarrativeKind::Stable; }
@@ -147,7 +147,7 @@ namespace {
             return swapWords(text, seed, kUnreliableSwapChance);
         }
         int shownValue(int actual, Stat stat, unsigned seed) const override {
-            if (stat == Stat::Sanity) return actual;  // you can still tell how you are doing
+            if (stat == Stat::Sanity) return actual;  // This part of the code is for checking if you can still tell how you are doing
             return jitter(actual, kUnreliableJitter, stat, seed);
         }
         float dread() const override { return 0.35f; }
