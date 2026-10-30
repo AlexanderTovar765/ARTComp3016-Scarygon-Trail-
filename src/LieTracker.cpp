@@ -12,7 +12,7 @@ namespace {
         return words;
     }
 
-    // Just the letters, so "wagon," and "hearse," compare as words, not punctuation.
+    // This part of the code is just the letters, so "wagon," and "hearse," compare as words, not punctuation.
     std::string lettersOnly(const std::string& word) {
         std::string out;
         for (unsigned char c : word) {
@@ -35,13 +35,13 @@ bool LieTracker::findTextLie(const std::string& truth, const std::string& shown,
     TextLie swap;
     TextLie aside;
 
-    std::size_t i = 0;  // position in the true text
-    std::size_t j = 0;  // position in the shown text
+    std::size_t i = 0;  // This part of the code sets position in the true text
+    std::size_t j = 0;  // This part of the code sets position in the shown text
     while (j < s.size()) {
-        if (i < t.size() && t[i] == s[j]) {          // same word: nothing to see
+        if (i < t.size() && t[i] == s[j]) {          
             ++i;
             ++j;
-        } else if (s[j][0] == '(') {                 // a comment the game added, in brackets
+        } else if (s[j][0] == '(') {                 // This part of the code is for a comment the game added, in brackets
             std::string text;
             while (j < s.size()) {
                 if (!text.empty()) text += ' ';
@@ -55,7 +55,7 @@ bool LieTracker::findTextLie(const std::string& truth, const std::string& shown,
                 aside.shown = text;
                 aside.isAside = true;
             }
-        } else if (i < t.size()) {                   // a word that was swapped
+        } else if (i < t.size()) {                   // This part of the code is for a word that was swapped
             const std::string a = lettersOnly(t[i]);
             const std::string b = lettersOnly(s[j]);
             if (!haveSwap && !a.empty() && !b.empty() && a != b) {
@@ -65,7 +65,7 @@ bool LieTracker::findTextLie(const std::string& truth, const std::string& shown,
             }
             ++i;
             ++j;
-        } else {                                     // extra words with nothing to compare to
+        } else {                                     // This part of the code is for extra words with nothing to compare to
             ++j;
         }
     }
@@ -99,7 +99,7 @@ void LieTracker::recordText(const std::string& truth, const std::string& shown) 
 
 void LieTracker::recordBars(const std::vector<Bar>& bars) {
     for (const Bar& bar : bars) {
-        if (bar.shown != bar.truth) {   // one wrong bar is enough to count this screen
+        if (bar.shown != bar.truth) {   
             addBar(m_day, bar);
             addBar(m_total, bar);
             return;
