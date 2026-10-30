@@ -9,7 +9,7 @@ namespace {
         return name + " has died.";
     }
 }
-
+// This part of the code is the part of the memberwatcher that reacts when a family members status changes
 void MemberWatcher::onMemberStatusChanged(const PartyMember& member,
                                           PartyMember::Status oldStatus,
                                           PartyMember::Status newStatus) {
