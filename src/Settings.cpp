@@ -27,13 +27,13 @@ namespace {
 Settings Settings::load(const std::string& path) {
     Settings settings;
     std::ifstream file(path);
-    if (!file.is_open()) return settings;  // optional file: defaults are fine
+    if (!file.is_open()) return settings;  // This part of the code is for optional file: defaults should be fine
 
     std::string raw;
     int lineNumber = 0;
     while (std::getline(file, raw)) {
         ++lineNumber;
-        if (lineNumber == 1 && raw.compare(0, 3, "\xEF\xBB\xBF") == 0) raw.erase(0, 3);  // UTF-8 BOM
+        if (lineNumber == 1 && raw.compare(0, 3, "\xEF\xBB\xBF") == 0) raw.erase(0, 3);  // This part of the code is for the UTF-8 BOM
         const std::string line = trim(raw);
         if (line.empty() || line[0] == '#') continue;
 
