@@ -8,7 +8,7 @@
 #include <optional>
 
 namespace {
-    // Soft limits so text fits the panel and buttons. Going over only produces a warning
+    // This part of the code is for the soft limits so text fits the panel and buttons. Going over only produces a warning
     // (the game still runs; the text just gets cut off with "...").
     constexpr std::size_t kMaxChoices      = 4;
     constexpr std::size_t kMaxLabelChars   = 46;
@@ -29,7 +29,7 @@ namespace {
         return s;
     }
 
-    // The built-in font only draws plain ASCII. Convert the typographic characters word
+    // This part of the code is for the built-in font only draws plain ASCII. Convert the typographic characters word
     // processors like to insert (curly quotes, dashes, ellipsis) and replace anything else.
     std::string toAscii(const std::string& in) {
         std::string out;
@@ -85,7 +85,7 @@ bool Trail::loadFromFile(const std::string& path) {
         return false;
     }
 
-    // State of the event / choice currently being read.
+    // This part of the code is for the state of the event / choice currently being read.
     bool inEvent = false;
     bool inChoice = false;
     bool eventOk = true;
@@ -178,9 +178,9 @@ bool Trail::loadFromFile(const std::string& path) {
     int lineNumber = 0;
     while (std::getline(file, raw)) {
         ++lineNumber;
-        if (lineNumber == 1 && raw.compare(0, 3, "\xEF\xBB\xBF") == 0) raw.erase(0, 3);  // UTF-8 BOM
+        if (lineNumber == 1 && raw.compare(0, 3, "\xEF\xBB\xBF") == 0) raw.erase(0, 3);  // This part of the code is for UTF-8 BOM
 
-        const std::string line = trim(toAscii(raw));  // trim also removes a Windows '\r'
+        const std::string line = trim(toAscii(raw));  // This part of the code is so trim also removes a Windows '\r'
         if (line.empty() || line[0] == '#') continue;
 
         const std::string lower = toLower(line);
@@ -225,7 +225,7 @@ bool Trail::loadFromFile(const std::string& path) {
             } else if (key == "result") {
                 result = value;
             } else if (key == "action") {
-                // Animations are decoration: a bad name never skips the event, it just gets no animation.
+                // This part of the code keeps the animations are decoration: a bad name never skips the event, it just gets no animation.
                 if (!parseAction(value, choiceAction)) {
                     warn(lineNumber, "unknown action '" + value + "'; the choice gets no animation");
                     choiceAction = ActionId::None;
@@ -287,7 +287,7 @@ bool Trail::loadFromFile(const std::string& path) {
     }
     finishEvent();
 
-    // A slot that only has desperate variants would be empty most of the time.
+    // This part of the code is for a slot that only has desperate variants would be empty most of the time.
     for (const auto& entry : m_events) {
         bool hasDefault = false;
         for (const Event& event : entry.second) {
@@ -316,7 +316,7 @@ const Event* Trail::getEvent(int day, TimePart part, ConditionSet active) const 
         if (!event.getCondition().has_value()) {
             if (!normal) normal = &event;
         } else if (active.has(*event.getCondition())) {
-            return &event;  // an active desperate variant replaces the normal event
+            return &event;  // This part of the code is for an active desperate variant replaces the normal event
         }
     }
     return normal;
