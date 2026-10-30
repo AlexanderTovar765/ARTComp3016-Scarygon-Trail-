@@ -67,7 +67,7 @@ EndingId Progress::classify(bool survived, int aliveCount, int sanity, int wagon
 Progress Progress::load(const std::string& path, std::vector<std::string>* warnings) {
     Progress p;
     std::ifstream file(path);
-    if (!file.is_open()) return p;   // first run: nothing saved yet
+    if (!file.is_open()) return p;   // This part of the code is for first run: nothing saved yet
 
     auto warn = [&](int line, const std::string& message) {
         if (warnings) warnings->push_back(path + " line " + std::to_string(line) + ": " + message);
@@ -139,7 +139,7 @@ bool Progress::save(const std::string& path) const {
         }
         out << "\n";
     };
-
+//this part of the code writes the remembered text to saveprogress.txt and a txt file
     out << "# Saved by The Scarygon Trail. Safe to delete: the game just starts a fresh record.\n";
     out << "difficulty = " << lower(difficultyName(difficulty)) << "\n";
     out << "runs = " << runs << "\n";
