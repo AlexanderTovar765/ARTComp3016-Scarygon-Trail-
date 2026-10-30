@@ -3,7 +3,7 @@
 #include <fstream>
 #include <string>
 
-// Optional, anonymous playtest log. When switched on (data/settings.txt or the L key on the
+// This part of the code is technically optional, anonymous playtest log. When switched on (data/settings.txt or the L key on the
 // title screen) the game writes one CSV file per launch into playtest_logs/ with the choices
 // made and how each run ended. It records nothing personal: just a random session id, the
 // date, and elapsed time. Testers can send the file back as evidence for the playtesting
@@ -12,7 +12,7 @@ class PlaytestLog {
 public:
     ~PlaytestLog();
 
-    // Opens a new log file in 'folder' (created if needed). Returns false if it cannot.
+    // This part of the code opens a new log file in 'folder' (created if needed). Returns false if it cannot.
     bool start(const std::string& folder, const std::string& buildLabel);
     void stop();
     bool isOpen() const { return m_file.is_open(); }
@@ -26,7 +26,7 @@ public:
     void logRunEnd(const std::string& outcome, int partsPlayed, int survivors,
                    int food, int health, int sanity, int wagon);
 
-    // Quotes a field for CSV (doubles any quotes, wraps it if it holds a comma or quote).
+    // This part of the code quotes a field for CSV (doubles any quotes, wraps it if it holds a comma or quote).
     static std::string csvField(const std::string& text);
 
 private:
