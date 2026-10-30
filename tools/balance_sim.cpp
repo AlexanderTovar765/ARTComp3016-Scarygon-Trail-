@@ -1,4 +1,4 @@
-// Balance simulator for The Scarygon Trail.
+// This part of the code is the balance simulator for The Scarygon Trail.
 //
 // Plays thousands of full games using the real event loader (Trail) and the real
 // rules (Party), with different strategies, and prints a Markdown report.
@@ -39,7 +39,7 @@ namespace {
 
     int total(const Effects& e) { return e.food + e.health + e.sanity + e.wagon; }
 
-    // Picks a choice index according to the strategy.
+    // This part of the code picks a choice index according to the strategy.
     std::size_t pick(Strategy strategy, const Event& event, const Party& party, std::mt19937& rng) {
         const std::vector<Choice>& choices = event.getChoices();
         if (strategy == Strategy::Random) {
@@ -55,7 +55,7 @@ namespace {
                 score = total(e);
             } else if (strategy == Strategy::Reckless) {
                 score = -total(e);
-            } else {  // Cautious: maximise the lowest of the resulting stats
+            } else {  // This part of the code is for the cautious: maximise the lowest of the resulting stats
                 Party copy = party;
                 copy.apply(e);
                 copy.advanceTime();
@@ -70,17 +70,17 @@ namespace {
     struct Results {
         int runs = 0;
         int survived = 0;
-        std::map<std::string, int> deaths;   // cause -> count
-        std::vector<int> deathDay;           // index = day
+        std::map<std::string, int> deaths;   // This part of the code is for the cause -> count
+        std::vector<int> deathDay;           // This part of the code is for the index = day
         long long finalFood = 0, finalHealth = 0, finalSanity = 0, finalWagon = 0;
         int starvedRuns = 0;
         long long partsPlayed = 0, partsStable = 0, partsUnreliable = 0, partsBreakdown = 0;
         int ranIntoUnreliable = 0, ranIntoBreakdown = 0;
-        long long membersLost = 0;                 // family members who died, summed over all runs
-        long long desperateShown = 0;              // desperate variants that appeared
+        long long membersLost = 0;                 // This part of the code is for the family members who died, summed over all runs
+        long long desperateShown = 0;              // This part of the code is for the desperate variants that appeared
         int runsWithDesperate = 0;
-        std::map<int, int> survivorCounts;         // family members alive at the end -> runs
-        std::map<std::string, int> variantRuns;    // desperate variant (by condition) -> runs that saw it
+        std::map<int, int> survivorCounts;         // This part of the code is for the family members alive at the end -> runs
+        std::map<std::string, int> variantRuns;    // This part of the code is for the desperate variant (by condition) -> runs that saw it
     };
 
     void playOne(const Trail& original, Strategy strategy, Difficulty difficulty, std::mt19937& rng, Results& out) {
@@ -89,7 +89,7 @@ namespace {
         Party party;
         party.setDifficulty(difficulty);
         party.reset();
-        ThresholdWatcher watcher;                   // the same observer the game uses
+        ThresholdWatcher watcher;                   // This part of the code is for the same observer the game uses
         party.addObserver(&watcher);
         bool starved = false, sawUnreliable = false, sawBreakdown = false, sawDesperate = false;
         std::map<std::string, bool> seenVariant;
