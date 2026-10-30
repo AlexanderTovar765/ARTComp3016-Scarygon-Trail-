@@ -12,7 +12,7 @@ void ThresholdWatcher::onStatChanged(Stat stat, int oldValue, int newValue) {
         check(Condition::LowHealth, kLowHealth, oldValue, newValue, "Warning: the family is in poor health.");
         break;
     case Stat::Sanity:
-        break;  // sanity is handled by the NarrativeState instead
+        break;  //This part of the code makes sure the sanity is handled by the NarrativeState instead
     }
 }
 
@@ -22,7 +22,7 @@ void ThresholdWatcher::check(Condition condition, int threshold, int oldValue, i
     const bool wasLow = oldValue <= threshold;
 
     m_active.set(condition, isLow);
-    if (isLow && !wasLow) {          // only a drop INTO the danger zone warns, never a recovery
+    if (isLow && !wasLow) {          // This part of the code makes sure only a drop INTO the danger zone warns, never a recovery
         m_warnings.push_back(warning);
     }
 }
