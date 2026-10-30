@@ -18,7 +18,7 @@ import wave
 
 RATE = 22050
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "audio")
-LOOP_SECONDS = 8  # every loop frequency below is a multiple of 1/8 Hz so it fits whole cycles
+LOOP_SECONDS = 8  # This part of the code is for every loop frequency below is a multiple of 1/8 Hz so it fits whole cycles
 
 
 def save(name, samples, peak=0.7):
@@ -82,7 +82,7 @@ def silence(seconds):
     return [0.0] * int(seconds * RATE)
 
 
-# ---- seamless ambient loops ---------------------------------------------------
+# This part of the code is for seamless ambient loops 
 
 def loop(parts, shimmer_seed):
     n = LOOP_SECONDS * RATE
@@ -146,21 +146,21 @@ def make_loops():
     save("ambient_dread.wav", dread, peak=0.55)
 
 
-# ---- one-shot effects -----------------------------------------------------------
+# This part of the code is for the one-shot effects 
 
 def make_effects():
     rng = random.Random(7)
 
-    # click: a tiny tick
+    # This part of the code is for the click: a tiny tick
     click = mix(decay(tone(1500, 0.06), 70), decay([rng.uniform(-1, 1) * 0.5 for _ in range(int(0.04 * RATE))], 90))
     save("click.wav", fade_tail(click), peak=0.5)
 
-    # good: rising chime
+    # This part of the code is for good: rising chime
     notes = [(523.25, 0.0), (659.25, 0.09), (783.99, 0.18)]
     good = mix(*[concat(silence(t), decay(tone(f, 0.55, harmonics=((1, 1.0), (2, 0.35), (3, 0.12))), 5.5)) for f, t in notes])
     save("good.wav", fade_tail(good), peak=0.6)
 
-    # bad: sour falling buzz
+    # This part of the code is for bad: sour falling buzz
     n = int(0.45 * RATE)
     bad = []
     phase = 0.0
@@ -170,21 +170,21 @@ def make_effects():
         bad.append(math.sin(phase) + 0.5 * math.sin(2 * phase * 1.01) + 0.25 * math.sin(3 * phase))
     save("bad.wav", fade_tail(envelope(bad, 0.01, 0.2)), peak=0.55)
 
-    # warning: two sharp beeps
+    # This part of the code is for warning: two sharp beeps
     beep = envelope(tone(880, 0.13, harmonics=((1, 1.0), (2, 0.3))), 0.005, 0.04)
     save("warning.wav", fade_tail(concat(beep, silence(0.08), beep)), peak=0.6)
 
-    # death: a low tolling bell
+    # This part of the code is for death: a low tolling bell
     bell = mix(*[decay(tone(f, 2.0, v), r) for f, v, r in
                  ((98.0, 1.0, 2.2), (196.0, 0.5, 2.8), (246.0, 0.3, 3.4), (392.0, 0.18, 4.6), (587.0, 0.1, 6.0))])
     save("death.wav", fade_tail(bell), peak=0.75)
 
-    # day end: gentle resolving chord
+    # This part of the code is for day end: gentle resolving chord
     chord = mix(*[concat(silence(t), decay(tone(f, 1.1, harmonics=((1, 1.0), (2, 0.25))), 3.2)) for f, t in
                   ((392.0, 0.0), (493.88, 0.18), (587.33, 0.36), (783.99, 0.54))])
     save("day_end.wav", fade_tail(chord), peak=0.6)
 
-    # state change: eerie falling glissando with wobble
+    # This part of the code is for state change: eerie falling glissando with wobble
     n = int(0.9 * RATE)
     eerie = []
     phase = 0.0
@@ -195,7 +195,7 @@ def make_effects():
         eerie.append(math.sin(phase) * (0.6 + 0.4 * math.sin(2 * math.pi * 11 * t)))
     save("state_change.wav", fade_tail(envelope(eerie, 0.04, 0.35)), peak=0.55)
 
-    # start: two bright notes
+    # This part of the code is for thestart: two bright notes
     start = concat(decay(tone(392.0, 0.3, harmonics=((1, 1.0), (2, 0.3))), 5.0),
                    decay(tone(587.33, 0.5, harmonics=((1, 1.0), (2, 0.3))), 4.5))
     save("start.wav", fade_tail(start), peak=0.6)
