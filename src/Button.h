@@ -3,9 +3,9 @@
 #include <string>
 #include "TextRenderer.h"
 
-// A clickable rectangle with a text label, used for the numbered choices in the
-// bottom panel. It only knows how to draw itself and answer "is this point inside
-// me?". Game decides what clicking it means.
+// This part of the code makes a clickable rectangle with a text label, used for the numbered choices in the
+// bottom panel. It will only know how to draw itself and answer "is this point inside
+// me?". Game decides what clicking it will mean.
 class Button {
 public:
     Button(std::string label, SDL_FRect rect);
@@ -16,7 +16,7 @@ public:
     bool contains(float x, float y) const;
     const std::string& getLabel() const { return m_label; }
 
-    // 'number' is shown as a prefix ("1. Ford the river") and matches the keyboard shortcut.
+    // This part of the code sets the 'number' to be shown as a prefix ("1. Ford the river") and matches the keyboard shortcut.
     void draw(SDL_Renderer* renderer, const TextRenderer& text, int number) const;
 
 private:
