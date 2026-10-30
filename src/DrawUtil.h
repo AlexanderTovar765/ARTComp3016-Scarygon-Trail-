@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cmath>
 
-// Small drawing helpers shared by the scene artwork. Everything on screen is built from
+// This part of the code is for the small drawing helpers shared by the scene artwork. Everything on screen is built from
 // rectangles, circles and lines, so there are no image files.
 namespace draw {
     constexpr float kPi = 3.14159265f;
@@ -13,7 +13,7 @@ namespace draw {
         SDL_SetRenderDrawColor(r, c.r, c.g, c.b, alpha);
     }
 
-    // Size of one visible "pixel" in scene units. 1 for smooth drawing; the pixel-art pass sets it to
+    // This part of the code is for the size of one visible "pixel" in scene units. 1 for smooth drawing; the pixel-art pass sets it to
     // its pixel size so that rows and thin shapes never fall between two pixels and vanish.
     inline float& pixelStep() { static float step = 1.0f; return step; }
 
@@ -25,7 +25,7 @@ namespace draw {
         SDL_RenderFillRect(r, &rect);
     }
 
-    // A one-pixel line. Inside the pixel-art pass SDL's own thin lines can vanish, so build it from blocks.
+    // This part of the code is for one-pixel line. Inside the pixel-art pass SDL's own thin lines can vanish, so build it from blocks.
     inline void line(SDL_Renderer* r, float x0, float y0, float x1, float y1) {
         const float st = pixelStep();
         if (st <= 1.0f) { SDL_RenderLine(r, x0, y0, x1, y1); return; }
@@ -78,7 +78,7 @@ namespace draw {
         strokeEllipse(r, cx, cy, radius, radius);
     }
 
-    // A filled half-ellipse sitting on baseY (hills, the wagon's canvas cover, bushes).
+    // This part of the code is for a filled half-ellipse sitting on baseY (hills, the wagon's canvas cover, bushes).
     inline void fillDome(SDL_Renderer* r, float cx, float baseY, float halfWidth, float height) {
         const float st = pixelStep();
         for (float row = 0.0f; row < height; row += st) {
@@ -88,13 +88,13 @@ namespace draw {
         }
     }
 
-    // A line with some thickness (SDL's own lines are one pixel wide).
+    // This part of the code is for a line with some thickness (SDL's own lines are one pixel wide).
     inline void thickLine(SDL_Renderer* r, float x0, float y0, float x1, float y1, float thickness) {
         const float dx = x1 - x0, dy = y1 - y0;
         const float length = std::sqrt(dx * dx + dy * dy);
         if (length < 0.001f || thickness <= 1.0f) { line(r, x0, y0, x1, y1); return; }
         const float st = pixelStep();
-        if (st > 1.0f) {   // pixel-art pass: stamp square blocks along the line
+        if (st > 1.0f) {   
             const float size = std::max(st, std::floor(thickness / st + 0.5f) * st);
             const int n = std::max(1, static_cast<int>(std::ceil(length / st)));
             for (int i = 0; i <= n; ++i) {
@@ -109,7 +109,7 @@ namespace draw {
         }
     }
 
-    // Spikes radiating from a point: impacts, sparkles, flashes.
+    // This part of the code is for the spikes radiating from a point: impacts, sparkles, flashes.
     inline void starBurst(SDL_Renderer* r, float cx, float cy, float inner, float outer, int spikes, float rotation) {
         for (int i = 0; i < spikes; ++i) {
             const float a = rotation + 2.0f * kPi * static_cast<float>(i) / static_cast<float>(spikes);
