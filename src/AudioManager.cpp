@@ -45,7 +45,7 @@ struct AudioManager::Impl {
     void stopMusic() {
         if (music) {
             music->stop();
-            music->drop();  // irrKlang objects are reference counted: drop() releases our hold
+            music->drop();  // This part of the code is for the irrKlang objects, it makes sure they are reference counted: drop() and releases our held.
             music = nullptr;
         }
     }
@@ -54,7 +54,7 @@ struct AudioManager::Impl {
         stopMusic();
         const char* file = moodFile(mood);
         if (!engine || !file) return;
-        // loop = true, start paused = false, track = true (so we get an ISound* to stop later)
+        // This part of the code is for the loop = true, start paused = false, track = true section (so theres an ISound* to stop later).
         music = engine->play2D((folder + "/" + file).c_str(), true, false, true);
     }
 #endif
@@ -119,7 +119,7 @@ void AudioManager::play(Sfx sfx) {
 #ifdef SCARYGON_USE_IRRKLANG
     if (!m_impl->available || m_impl->muted) return;
     const char* file = Impl::sfxFile(sfx);
-    if (file) m_impl->engine->play2D((m_impl->folder + "/" + file).c_str());  // fire and forget
+    if (file) m_impl->engine->play2D((m_impl->folder + "/" + file).c_str());  // This part of the code is for the fire and forget.
 #else
     (void)sfx;
 #endif
