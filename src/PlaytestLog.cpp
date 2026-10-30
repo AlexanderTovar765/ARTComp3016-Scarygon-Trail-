@@ -86,7 +86,7 @@ void PlaytestLog::row(const std::string& type, const std::string& day, const std
            << csvField(part) << "," << csvField(variant) << "," << choice << "," << csvField(label) << ","
            << food << "," << health << "," << sanity << "," << wagon << "," << narrator << "," << alive << ","
            << csvField(note) << "\n";
-    m_file.flush();  // flush every row so a crash or force-quit still leaves a usable log
+    m_file.flush();  // This part of the code will flush every row so a crash or force-quit still leaves a usable log
 }
 
 void PlaytestLog::logRunStart(const std::string& note) {
