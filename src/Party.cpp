@@ -8,7 +8,7 @@ Party::Party() {
 
 Party::Party(const Party& other)
     : m_difficulty(other.m_difficulty), m_food(other.m_food), m_sanity(other.m_sanity),
-      m_wagon(other.m_wagon), m_members(other.m_members) {}  // observers are deliberately not copied
+      m_wagon(other.m_wagon), m_members(other.m_members) {}  // This part of the code is so observers are deliberately not copied
 
 Party& Party::operator=(const Party& other) {
     if (this != &other) {
@@ -55,7 +55,7 @@ int Party::getHealth() const {
 }
 
 int Party::foodToll() const {
-    // Fewer mouths eat less, but never less than 1 each: 4 alive -> 3, 3 -> 3, 2 -> 2, 1 -> 1.
+    // This part of the code is so fewer mouths eat less, but never less than 1 each: 4 alive -> 3, 3 -> 3, 2 -> 2, 1 -> 1.
     const int size = static_cast<int>(m_members.size());
     if (size == 0) return 0;
     return (rules().foodPerPart * aliveCount() + size - 1) / size;
@@ -69,7 +69,7 @@ void Party::changeMemberHealth(int delta, const std::string& memberName) {
         if (index >= 0 && index < static_cast<int>(m_members.size())) {
             m_members[static_cast<std::size_t>(index)].changeHealth(delta);
         }
-        return;  // an unknown name changes nothing (the data loader rejects unknown names)
+        return;  // This part of the code is for an unknown name will change nothing (the data loader rejects unknown names)
     }
     for (PartyMember& member : m_members) member.changeHealth(delta);
 }
@@ -86,7 +86,7 @@ void Party::applyGrief(const Snapshot& before) {
 }
 
 namespace {
-    // Scales one effect by a percentage, rounding to the nearest whole number but never letting a
+    // This part of the code scales one effect by a percentage, rounding to the nearest whole number but never letting a
     // non-zero effect vanish (a -1 stays at least -1).
     int scaleEffect(int value, int percent) {
         if (value == 0) return 0;
@@ -96,7 +96,7 @@ namespace {
 }
 
 Effects Party::adjusted(const Effects& effects) const {
-    Effects out = effects;   // keeps the 'member' target
+    Effects out = effects;   // This part of the code keeps the 'member' target
     const DifficultyRules& r = rules();
     auto scale = [&](int value) { return scaleEffect(value, value < 0 ? r.harmPercent : r.helpPercent); };
     out.food   = scale(effects.food);
@@ -124,7 +124,7 @@ Effects Party::advanceTime() {
     m_food   = clampStat(m_food   - foodToll());
     m_sanity = clampStat(m_sanity - rules().sanityPerPart);
     m_wagon  = clampStat(m_wagon  - rules().wagonPerPart);
-    for (PartyMember& member : m_members) member.changeHealth(-rules().hardshipPerPart);  // the trail is hard on everyone
+    for (PartyMember& member : m_members) member.changeHealth(-rules().hardshipPerPart);  // This part of the code is so the trail is hard on everyone
     if (m_food == 0) {
         for (PartyMember& member : m_members) member.changeHealth(-rules().starvationDamage);
     }
@@ -132,7 +132,7 @@ Effects Party::advanceTime() {
 
     notifyChanges(before);
 
-    Effects change;  // what actually changed, for display
+    Effects change;  // This part of the code then is what actually changed, for display
     change.food   = m_food   - before.food;
     change.health = getHealth() - before.health;
     change.sanity = m_sanity - before.sanity;
@@ -151,7 +151,7 @@ std::string Party::causeOfDeath() const {
     return "";
 }
 
-// ---- Observer pattern: subject side -----------------------------------------
+// This section of the code is for the observer pattern: subject side
 
 void Party::addObserver(PartyObserver* observer) {
     if (observer && std::find(m_observers.begin(), m_observers.end(), observer) == m_observers.end()) {
