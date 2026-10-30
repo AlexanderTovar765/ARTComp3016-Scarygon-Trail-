@@ -9,7 +9,7 @@
 #include "Effects.h"
 #include "TimeOfDay.h"
 
-// One option the player can pick: the button label, what happens, and how it
+// This part of the code allows one option the player can pick: the button label, what happens, and how it
 // changes the party's stats.
 class Choice {
 public:
@@ -19,7 +19,7 @@ public:
     const std::string& getLabel() const      { return m_label; }
     const std::string& getResultText() const { return m_resultText; }
     const Effects&     getEffects() const    { return m_effects; }
-    ActionId           getAction() const     { return m_action; }   // the animation played with the result
+    ActionId           getAction() const     { return m_action; }   // this part of the code makes the animation play with the result.
 
 private:
     std::string m_label;
@@ -28,9 +28,9 @@ private:
     ActionId    m_action;
 };
 
-// A narrative moment: it belongs to one part of one day and offers up to 4 Choices.
+// This part of the code checks the narrative moment: it belongs to one part of one day and offers 4 choices.
 // An event may be a "desperate variant": it only appears (in place of the normal event
-// for that slot) while its Condition is active, e.g. LowFood.
+// for that slot) while said condition is active, e.g. LowFood.
 class Event {
 public:
     Event(int day, TimePart part, std::string text, std::vector<Choice> choices,
@@ -43,7 +43,7 @@ public:
     const std::string& getText() const         { return m_text; }
     const std::vector<Choice>& getChoices() const { return m_choices; }
     const std::optional<Condition>& getCondition() const { return m_condition; }
-    SceneId getScene() const                   { return m_scene; }   // the animation shown while the event is on screen
+    SceneId getScene() const                   { return m_scene; }   
 
 private:
     int m_day;
