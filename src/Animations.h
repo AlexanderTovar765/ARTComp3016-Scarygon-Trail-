@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 
+// This part of the code is for setting the animations on each event. (e.g. if the user chooses to feed the oxen, 
+// the animation will register that moment instead of the other 3.)
 enum class SceneId {
     Trail = 0,    
     OxenStare,  
