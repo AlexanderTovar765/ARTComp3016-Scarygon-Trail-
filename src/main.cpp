@@ -1,6 +1,7 @@
 #include <SDL3/SDL_main.h>
 #include "Game.h"
 
+//this part of the code is the programs entry point
 int main(int /*argc*/, char** /*argv*/) {
     Game game;
 
