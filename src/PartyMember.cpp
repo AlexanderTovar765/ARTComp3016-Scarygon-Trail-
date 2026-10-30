@@ -11,10 +11,10 @@ void PartyMember::reset() {
 }
 
 void PartyMember::changeHealth(int delta) {
-    if (!isAlive()) return;  // the dead stay dead
+    if (!isAlive()) return;  // This part of the code makes the dead stay dead
 
     if (delta < 0) {
-        const int damage = ((-delta) * m_frailty + 99) / 100;  // frailty-scaled, rounded up
+        const int damage = ((-delta) * m_frailty + 99) / 100;  // This part of the code has frailty-scaled, rounded up
         m_health -= damage;
     } else {
         m_health += delta;
