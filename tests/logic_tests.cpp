@@ -1,4 +1,4 @@
-// Logic tests for The Scarygon Trail. They cover everything that does not need a window:
+// This part of the code are my logic tests for The Scarygon Trail. They cover everything that does not need a window:
 // the party and its members, the Observer pattern, the narrator (State pattern), the event
 // loader (including deliberately broken files), settings, the playtest log, audio fallbacks,
 // and whether every piece of text fits its panel. See docs/test-cases.md for the test list.
@@ -101,16 +101,16 @@ static void testMembers() {
     begin("T03 PartyMember: frailty, healing cap, permanent death, status thresholds");
     PartyMember normal("Test", 100), frail("Frail", 150), tough("Tough", 90);
     normal.changeHealth(-10); frail.changeHealth(-10); tough.changeHealth(-10);
-    CHECK(normal.getHealth() == 90 && frail.getHealth() == 85 && tough.getHealth() == 91);  // damage rounds up
+    CHECK(normal.getHealth() == 90 && frail.getHealth() == 85 && tough.getHealth() == 91);  // This part of the code checked damage rounds up
     normal.changeHealth(+50);
-    CHECK(normal.getHealth() == 100);                                                          // healing is capped
+    CHECK(normal.getHealth() == 100);                                                          // This part of the code checked healing is capped
     CHECK(normal.getStatus() == PartyMember::Status::Healthy);
     normal.changeHealth(-65);
-    CHECK(normal.getHealth() == 35 && normal.getStatus() == PartyMember::Status::Ill);         // below 40 = ill
+    CHECK(normal.getHealth() == 35 && normal.getStatus() == PartyMember::Status::Ill);         // This part of the code checked below 40 = ill
     normal.changeHealth(-500);
     CHECK(normal.getHealth() == 0 && normal.getStatus() == PartyMember::Status::Dead && !normal.isAlive());
     normal.changeHealth(+50);
-    CHECK(normal.getHealth() == 0);                                                            // the dead stay dead
+    CHECK(normal.getHealth() == 0);                                                            // This part of the code checked the dead stay dead
     normal.reset();
     CHECK(normal.getHealth() == 100);
     CHECK(findMemberIndex("granny") == 3 && findMemberIndex("MA") == 0 && findMemberIndex("nobody") == -1);
@@ -128,22 +128,22 @@ static void testPartyRules() {
     begin("T05 advanceTime: the trail's toll, and fewer mouths eat less");
     Party fresh;
     Effects toll = fresh.advanceTime();
-    CHECK(toll.food == -3 && toll.sanity == -4 && toll.wagon == -2 && toll.health == -4);      // full party
+    CHECK(toll.food == -3 && toll.sanity == -4 && toll.wagon == -2 && toll.health == -4);      // This part of the code checked full party
     CHECK(fresh.getFood() == 57 && fresh.getSanity() == 96 && fresh.getWagon() == 98);
     Party two; Effects kill; kill.health = -500;
     kill.member = "Ma"; two.apply(kill); kill.member = "Junior"; two.apply(kill);
-    Party probe = two;                                   // 2 alive -> the food toll is 2, not 3
+    Party probe = two;                                   // This part of the code checked 2 alive -> the food toll is 2, not 3
     const int before = probe.getFood();
     probe.advanceTime();
     CHECK(before - probe.getFood() == 2);
 
     begin("T06 Starvation: at 0 food every living member takes damage each part");
-    Party hungry; Effects spend; spend.food = -58;       // food 2
+    Party hungry; Effects spend; spend.food = -58;       // This part of the code checked food 2
     hungry.apply(spend);
     const int healthBefore = hungry.getHealth();
-    hungry.advanceTime();                                // eats 2 -> 0 food -> starving
+    hungry.advanceTime();                                // This part of the code checked eats 2 -> 0 food -> starving
     CHECK(hungry.getFood() == 0);
-    CHECK(healthBefore - hungry.getHealth() > hungry.rules().hardshipPerPart);   // more than hardship alone
+    CHECK(healthBefore - hungry.getHealth() > hungry.rules().hardshipPerPart);   // This part of the code checked more than hardship alone
     const int again = hungry.getHealth();
     hungry.advanceTime();
     CHECK(hungry.getFood() == 0 && hungry.getHealth() < again);
@@ -151,10 +151,10 @@ static void testPartyRules() {
     begin("T07 Targeted effects hit one member; untargeted hit everyone alive; unknown name is ignored");
     Party t; Effects hit; hit.health = -10; hit.member = "Pa";
     t.apply(hit);
-    CHECK(t.getMembers()[1].getHealth() == 91 && t.getMembers()[0].getHealth() == 100);   // Pa is tough (90%)
+    CHECK(t.getMembers()[1].getHealth() == 91 && t.getMembers()[0].getHealth() == 100);   // This part of the code checked Pa is tough (90%)
     Effects all; all.health = -10;
     Party u; u.apply(all);
-    CHECK(u.getMembers()[0].getHealth() == 90 && u.getMembers()[3].getHealth() == 85);    // Granny 150%
+    CHECK(u.getMembers()[0].getHealth() == 90 && u.getMembers()[3].getHealth() == 85);    // This part of the code checked Granny 150%
     Effects bogus; bogus.health = -50; bogus.member = "Nobody";
     Party v; v.apply(bogus);
     CHECK(v.getHealth() == 100);
@@ -163,7 +163,7 @@ static void testPartyRules() {
     Party g; Effects death; death.health = -500; death.member = "Granny";
     g.apply(death);
     CHECK(g.getSanity() == 100 - Party::kGriefSanity);
-    g.apply(death);                                                                       // already dead: no second penalty
+    g.apply(death);                                                                       // This part of the code checked already dead: no second penalty
     CHECK(g.getSanity() == 100 - Party::kGriefSanity);
 
     begin("T09 Game-over conditions and cause of death");
@@ -182,25 +182,25 @@ static void testObservers() {
     begin("T10 ThresholdWatcher: flags track low stats; warnings only on a drop INTO danger");
     Party party; ThresholdWatcher watcher; party.addObserver(&watcher);
     CHECK(!watcher.active().any() && watcher.takeWarnings().empty());
-    Effects drop; drop.food = -40;                      // food 60 -> 20 (low is <= 25)
+    Effects drop; drop.food = -40;                      // This part of the code checked food 60 -> 20 (low is <= 25)
     party.apply(drop);
     CHECK(watcher.active().has(Condition::LowFood));
     std::vector<std::string> warnings = watcher.takeWarnings();
     CHECK(warnings.size() == 1 && warnings[0].find("food") != std::string::npos);
-    CHECK(watcher.takeWarnings().empty());              // taken once, then gone
-    Effects more; more.food = -5;                       // still low: no repeat warning
+    CHECK(watcher.takeWarnings().empty());              // This part of the code checked taken once, then gone
+    Effects more; more.food = -5;                       // This part of the code checked still low: no repeat warning
     party.apply(more);
     CHECK(watcher.active().has(Condition::LowFood) && watcher.takeWarnings().empty());
-    Effects recover; recover.food = +50;                // back to safe: flag clears, no warning
+    Effects recover; recover.food = +50;                // This part of the code checked back to safe: flag clears, no warning
     party.apply(recover);
     CHECK(!watcher.active().has(Condition::LowFood) && watcher.takeWarnings().empty());
-    Effects wagon; wagon.wagon = -30;                   // wagon 100 -> 70 (low is <= 75)
+    Effects wagon; wagon.wagon = -30;                   // This part of the code checked wagon 100 -> 70 (low is <= 75)
     party.apply(wagon);
     CHECK(watcher.active().has(Condition::LowWagon) && watcher.takeWarnings().size() == 1);
 
     begin("T11 MemberWatcher: illness, recovery and death messages");
     Party p2; MemberWatcher members; p2.addObserver(&members);
-    Effects sick; sick.health = -50; sick.member = "Junior";       // 100 -> 40: not ill yet (ill is < 40)
+    Effects sick; sick.health = -50; sick.member = "Junior";       // This part of the code checked 100 -> 40: not ill yet (ill is < 40)
     p2.apply(sick);
     CHECK(members.takeMessages().empty());
     sick.health = -5;
@@ -216,26 +216,26 @@ static void testObservers() {
     CHECK(members.sawDeath());
     msgs = members.takeMessages();
     CHECK(msgs.size() == 1 && msgs[0].find("Granny has died") != std::string::npos);
-    CHECK(!members.sawDeath());                                    // reset once taken
+    CHECK(!members.sawDeath());                                    // This part of the code checked reset once taken
 
     begin("T12 Several observers, removal, and copies do not inherit observers");
-    Party p3; ThresholdWatcher a, b; p3.addObserver(&a); p3.addObserver(&b); p3.addObserver(&a);  // duplicate add ignored
+    Party p3; ThresholdWatcher a, b; p3.addObserver(&a); p3.addObserver(&b); p3.addObserver(&a);  // This part of the code checked duplicate add ignored
     Effects low; low.food = -45;
     p3.apply(low);
     CHECK(a.active().has(Condition::LowFood) && b.active().has(Condition::LowFood));
-    CHECK(a.takeWarnings().size() == 1);                           // told once, not twice
+    CHECK(a.takeWarnings().size() == 1);                           // This part of the code checked told once, not twice
     p3.removeObserver(&b);
     Effects wag; wag.wagon = -40;
     p3.apply(wag);
     CHECK(a.active().has(Condition::LowWagon) && !b.active().has(Condition::LowWagon));
     ThresholdWatcher third;
     Party p4; p4.addObserver(&third);
-    Party copy = p4;                                               // scratch copy: must not notify
+    Party copy = p4;                                               // This part of the code checked scratch copy: must not notify
     Effects x; x.food = -50;
     copy.apply(x);
     CHECK(!third.active().any() && copy.getFood() == 10);
     Party assigned; assigned.addObserver(&third);
-    assigned = copy;                                               // assignment is silent too
+    assigned = copy;                                               // This part of the code checked assignment is silent too
     CHECK(assigned.getFood() == 10 && !third.active().any());
 
     begin("T13 Party::reset notifies observers (so flags recover)");
@@ -262,7 +262,7 @@ static void testNarrator() {
     int changedU = 0, changedB = 0, asides = 0;
     for (unsigned seed = 0; seed < 200; ++seed) {
         CHECK(stable->filterText(sample, seed) == sample);
-        CHECK(unrel->filterText(sample, seed) == unrel->filterText(sample, seed));     // no flicker
+        CHECK(unrel->filterText(sample, seed) == unrel->filterText(sample, seed));     // This part of the code checked no flicker
         CHECK(broken->filterText(sample, seed) == broken->filterText(sample, seed));
         CHECK(isAscii(unrel->filterText(sample, seed)) && isAscii(broken->filterText(sample, seed)));
         if (unrel->filterText(sample, seed) != sample) ++changedU;
@@ -274,16 +274,16 @@ static void testNarrator() {
                 CHECK(stable->shownValue(v, s, seed) == v);
                 const int u = unrel->shownValue(v, s, seed);
                 CHECK(u >= 0 && u <= 100 && std::abs(u - v) <= 10);
-                if (s == Stat::Sanity) CHECK(u == v);                                  // honest while merely Unreliable
+                if (s == Stat::Sanity) CHECK(u == v);                                  // This part of the code checked honest while merely Unreliable
                 const int bb = broken->shownValue(v, s, seed);
                 CHECK(bb >= 0 && bb <= 100 && std::abs(bb - v) <= 30);
             }
         }
     }
-    CHECK(changedU == 200 && changedB == 200 && asides == 200);                         // lies always happen
+    CHECK(changedU == 200 && changedB == 200 && asides == 200);                         // This part of the code checked lies always happen
     CHECK(unrel->filterText("Nothing here can be swapped at all.", 3) == "Nothing here can be swapped at all.");
     CHECK(unrel->filterText("", 3).empty());
-    CHECK(broken->filterText("", 5).find('(') != std::string::npos);                    // empty text does not crash
+    CHECK(broken->filterText("", 5).find('(') != std::string::npos);                    // This part of the code checked empty text does not crash
     CHECK(broken->valueLabel(55) == "??" && stable->valueLabel(55) == "55");
     bool upper = false, caps = false;
     for (unsigned seed = 0; seed < 200 && !(upper && caps); ++seed) {
@@ -291,7 +291,7 @@ static void testNarrator() {
         upper = upper || b.find("Hearse") != std::string::npos;
         caps  = caps  || b.find("HEARSE") != std::string::npos;
     }
-    CHECK(upper && caps);                                                               // capitalisation preserved
+    CHECK(upper && caps);                                                               // This part of the code checked capitalisation preserved
     CHECK(stable->dread() == 0.0f && unrel->dread() > 0.0f && broken->dread() > unrel->dread());
 }
 
@@ -304,35 +304,35 @@ static void testLieTracker() {
     CHECK(!LieTracker::findTextLie("", "", lie));
     CHECK(LieTracker::findTextLie("The wagon crosses the river.", "The hearse crosses the river.", lie));
     CHECK(!lie.isAside && lie.truth == "wagon" && lie.shown == "hearse");
-    CHECK(LieTracker::findTextLie("Your wagon, again.", "Your hearse, again.", lie));      // punctuation is ignored
+    CHECK(LieTracker::findTextLie("Your wagon, again.", "Your hearse, again.", lie));      // This part of the code checked punctuation is ignored
     CHECK(lie.truth == "wagon" && lie.shown == "hearse");
-    CHECK(LieTracker::findTextLie("Wagon first.", "Hearse first.", lie));                  // capitals are fine
+    CHECK(LieTracker::findTextLie("Wagon first.", "Hearse first.", lie));                  // This part of the code checked capitals are fine
     CHECK(lie.truth == "Wagon" && lie.shown == "Hearse");
     CHECK(LieTracker::findTextLie("All is well.", "All is well. (It is fine.)", lie));
     CHECK(lie.isAside && lie.shown == "(It is fine.)");
-    CHECK(LieTracker::findTextLie("The ox eats.", "The critic eats. (They know.)", lie));  // a swap beats an aside as the example
+    CHECK(LieTracker::findTextLie("The ox eats.", "The critic eats. (They know.)", lie));  // This part of the code checked a swap beats an aside as the example
     CHECK(!lie.isAside && lie.truth == "ox" && lie.shown == "critic");
     CHECK(LieTracker::findTextLie("The ox and the deer.", "The ox and the lawyer.", lie));
-    CHECK(lie.truth == "deer" && lie.shown == "lawyer");                                   // the first real difference, not an equal word
+    CHECK(lie.truth == "deer" && lie.shown == "lawyer");                                   // This part of the code checked the first real difference, not an equal word
 
     begin("T25 LieTracker counts, reports and resets");
     LieTracker tracker;
     CHECK(tracker.dayCount() == 0 && tracker.totalCount() == 0);
     CHECK(tracker.dayReport() == "Truth check: the narrator told the truth today.");
     CHECK(tracker.journeyReport().empty());
-    tracker.recordText("The wagon rolls.", "The wagon rolls.");                            // not a lie
-    tracker.recordBars({ { "Food", 40, 40 }, { "Health", 70, 70 } });                      // not a lie
+    tracker.recordText("The wagon rolls.", "The wagon rolls.");                            // This part of the code checked not a lie
+    tracker.recordBars({ { "Food", 40, 40 }, { "Health", 70, 70 } });                      // This part of the code checked not a lie
     CHECK(tracker.totalCount() == 0);
     tracker.recordText("The wagon rolls.", "The hearse rolls.");
     CHECK(tracker.dayCount() == 1 && tracker.totalCount() == 1);
     CHECK(tracker.dayReport().find("once") != std::string::npos);
     CHECK(tracker.dayReport().find("\"hearse\" where the truth was \"wagon\"") != std::string::npos);
-    tracker.recordBars({ { "Food", 47, 41 }, { "Health", 10, 99 } });                      // several wrong bars still count once
+    tracker.recordBars({ { "Food", 47, 41 }, { "Health", 10, 99 } });                      // This part of the code checked several wrong bars still count once
     CHECK(tracker.dayCount() == 2);
     CHECK(tracker.dayReport().find("2 times") != std::string::npos);
     CHECK(tracker.dayReport().find("Food bar showed 47 when the truth was 41") != std::string::npos);
-    CHECK(tracker.dayReport().find("Health bar") == std::string::npos);                    // only the first example is given
-    tracker.startDay();                                                                    // a new day: the day starts again, the journey does not
+    CHECK(tracker.dayReport().find("Health bar") == std::string::npos);                    // This part of the code checked only the first example is given
+    tracker.startDay();                                                                    // This part of the code checked a new day: the day starts again, the journey does not
     CHECK(tracker.dayCount() == 0 && tracker.totalCount() == 2);
     CHECK(tracker.dayReport() == "Truth check: the narrator told the truth today.");
     CHECK(tracker.journeyReport() == "The narrator misled you 2 times.");
@@ -360,14 +360,14 @@ static void testLieTracker() {
                 ++texts;
                 for (unsigned seed = 1; seed <= 20; ++seed) {
                     LieTracker::TextLie found;
-                    CHECK(!LieTracker::findTextLie(sample, stable->filterText(sample, seed), found));   // Stable never lies
+                    CHECK(!LieTracker::findTextLie(sample, stable->filterText(sample, seed), found));   // This part of the code checked stable never lies
                     for (const NarrativeState* state : { unrel.get(), broken.get() }) {
                         const std::string shown = state->filterText(sample, seed);
                         const bool differs = shown != sample;
-                        CHECK(LieTracker::findTextLie(sample, shown, found) == differs);               // never misses, never invents
+                        CHECK(LieTracker::findTextLie(sample, shown, found) == differs);               // This part of the code checked never misses, never invents
                         if (differs && !found.isAside) {
                             CHECK(!found.truth.empty() && !found.shown.empty() && found.truth != found.shown);
-                            CHECK(shown.find(found.shown) != std::string::npos);                        // the player really saw it
+                            CHECK(shown.find(found.shown) != std::string::npos);                        // This part of the code checked the player really saw it
                         }
                         if (state == unrel.get() && differs) ++detectedUnreliable;
                     }
@@ -376,9 +376,9 @@ static void testLieTracker() {
         }
     }
     CHECK(texts >= 15 * 5);
-    CHECK(detectedUnreliable > 0);                                                                     // the narrator does lie, and it is caught
+    CHECK(detectedUnreliable > 0);                                                                     // This part of the code checked the narrator does lie, and it is caught
 
-    // HUD bars: Stable is honest, Breakdown moves them, and the tracker notices.
+    // This part of the code checked HUD bars: Stable is honest, Breakdown moves them, and the tracker notices.
     LieTracker bars;
     for (unsigned seed = 1; seed <= 50; ++seed) {
         for (const NarrativeState* state : { stable.get(), unrel.get(), broken.get() }) {
@@ -406,10 +406,10 @@ static void testRealEvents(const fs::path& root) {
     for (int day = 1; day <= 3; ++day) {
         for (int i = 0; i < kPartsPerDay; ++i) {
             const Event* ev = trail.getEvent(day, static_cast<TimePart>(i));
-            CHECK(ev != nullptr && !ev->getCondition().has_value());                   // a normal event in every slot
+            CHECK(ev != nullptr && !ev->getCondition().has_value());                   // This part of the code checked a normal event in every slot
             if (!ev) continue;
             CHECK(ev->getChoices().size() == 4);
-            for (const Choice& ch : ev->getChoices()) CHECK(!ch.getEffects().isZero());  // every choice does something
+            for (const Choice& ch : ev->getChoices()) CHECK(!ch.getEffects().isZero());  // This part of the code checked every choice does something
         }
     }
 
@@ -421,8 +421,8 @@ static void testRealEvents(const fs::path& root) {
     const Event* desperate = trail.getEvent(2, TimePart::Noon, lowFood);
     CHECK(normal && desperate && normal != desperate);
     CHECK(!normal->getCondition() && desperate->getCondition() && *desperate->getCondition() == Condition::LowFood);
-    CHECK(trail.getEvent(2, TimePart::Noon, lowWagon) == normal);                       // wrong condition: normal event
-    CHECK(trail.getEvent(1, TimePart::Dawn, lowFood) == trail.getEvent(1, TimePart::Dawn, none));  // no variant for that slot
+    CHECK(trail.getEvent(2, TimePart::Noon, lowWagon) == normal);                       // This part of the code checked wrong condition: normal event
+    CHECK(trail.getEvent(1, TimePart::Dawn, lowFood) == trail.getEvent(1, TimePart::Dawn, none));  // This part of the code checked no variant for that slot
     int variants = 0;
     for (int day = 1; day <= 3; ++day) for (int i = 0; i < kPartsPerDay; ++i) {
         ConditionSet all; all.set(Condition::LowFood); all.set(Condition::LowWagon); all.set(Condition::LowHealth);
@@ -441,16 +441,16 @@ static void testRealEvents(const fs::path& root) {
             const Event* ev = trail.getEvent(day, static_cast<TimePart>(i), pass ? every : none);
             if (!ev) continue;
             const int honest = static_cast<int>(text.wrap(ev->getText(), 912, 2).size());
-            CHECK(honest <= 4);                                                          // event screen: 4 lines above 4 buttons
+            CHECK(honest <= 4);                                                          // This part of the code checked event screen: 4 lines above 4 buttons
             worstEvent = std::max(worstEvent, honest);
             for (unsigned seed = 0; seed < 100; ++seed) {
                 worstEvent = std::max(worstEvent, static_cast<int>(text.wrap(broken->filterText(ev->getText(), seed), 912, 2).size()));
             }
             for (size_t c = 0; c < ev->getChoices().size(); ++c) {
                 const Choice& ch = ev->getChoices()[c];
-                CHECK(text.wrap(std::to_string(c + 1) + ". " + ch.getLabel(), 430, 2).size() <= 2);   // button: 2 lines
+                CHECK(text.wrap(std::to_string(c + 1) + ". " + ch.getLabel(), 430, 2).size() <= 2);   // This part of the code checked button: 2 lines
                 for (unsigned seed = 0; seed < 100; ++seed) {
-                    // result screen (7 lines): lying story + truthful summary + toll + starving
+                    // This part of the code checked result screen (7 lines): lying story + truthful summary + toll + starving
                     const std::string typical = broken->filterText(ch.getResultText(), seed) + " (" + ch.getEffects().describe() +
                         ") The trail takes its toll (Food -3, Health -13, Sanity -4, Wagon -2). The party is starving.";
                     worstResult = std::max(worstResult, static_cast<int>(text.wrap(typical, 912, 2).size()));
@@ -499,14 +499,14 @@ static void testBrokenFiles(const fs::path& tmp) {
     Trail bad;
     CHECK(bad.loadFromFile((tmp / "bad.txt").string()));
     CHECK(!bad.getWarnings().empty());
-    CHECK(bad.eventCount() == 2);                                                        // Dawn (day 1) and Night (day 3)
+    CHECK(bad.eventCount() == 2);                                                        // This part of the code checked dawn (day 1) and Night (day 3)
     const Event* good = bad.getEvent(1, TimePart::Dawn);
-    CHECK(good != nullptr && good->getText() == "It's \"quoted\" - and ?");              // curly quotes, dash, accent handled
-    CHECK(good && good->getChoices().size() == 1 && good->getChoices()[0].getEffects().food == 7);   // "+7" parsed
+    CHECK(good != nullptr && good->getText() == "It's \"quoted\" - and ?");              // This part of the code checked curly quotes, dash, accent handled
+    CHECK(good && good->getChoices().size() == 1 && good->getChoices()[0].getEffects().food == 7);   // This part of the code checked "+7" parsed
     const Event* night = bad.getEvent(3, TimePart::Night);
-    CHECK(night && night->getChoices()[0].getLabel() == "Up" && night->getChoices()[0].getEffects().sanity == 100);  // clamped
+    CHECK(night && night->getChoices()[0].getLabel() == "Up" && night->getChoices()[0].getEffects().sanity == 100);  // This part of the code checked clamped
     CHECK(bad.getEvent(1, TimePart::Noon) == nullptr && bad.getEvent(1, TimePart::Evening) == nullptr);
-    CHECK(bad.getEvent(3, TimePart::Dawn) == nullptr);                                   // both bad day-3 Dawn events rejected
+    CHECK(bad.getEvent(3, TimePart::Dawn) == nullptr);                                   // This part of the code checked both bad day-3 Dawn events rejected
     bool sawCondition = false, sawMember = false;
     for (const std::string& w : bad.getWarnings()) {
         sawCondition = sawCondition || w.find("unknown condition") != std::string::npos;
@@ -523,18 +523,18 @@ static void testBrokenFiles(const fs::path& tmp) {
         "[EVENT]\nday = 1\npart = Noon\nrequires = LowHealth\ntext = only a variant\n[CHOICE]\nlabel=a\nresult=b\nhealth=1\nmember=granny\n");
     Trail variants;
     CHECK(variants.loadFromFile((tmp / "variants.txt").string()));
-    CHECK(variants.eventCount() == 4);                                                   // the duplicate LowFood was dropped
+    CHECK(variants.eventCount() == 4);                                                   // This part of the code checked the duplicate LowFood was dropped
     ConditionSet food, wagon, both;
     food.set(Condition::LowFood); wagon.set(Condition::LowWagon);
     both.set(Condition::LowFood); both.set(Condition::LowWagon);
     CHECK(variants.getEvent(1, TimePart::Dawn)->getText() == "normal");
     CHECK(variants.getEvent(1, TimePart::Dawn, food)->getText() == "hungry");
     CHECK(variants.getEvent(1, TimePart::Dawn, wagon)->getText() == "wagon");
-    CHECK(variants.getEvent(1, TimePart::Dawn, both)->getText() == "hungry");            // file order breaks the tie
-    CHECK(variants.getEvent(1, TimePart::Noon) == nullptr);                              // only a variant: nothing normally
+    CHECK(variants.getEvent(1, TimePart::Dawn, both)->getText() == "hungry");            // This part of the code checked file order breaks the tie
+    CHECK(variants.getEvent(1, TimePart::Noon) == nullptr);                              // This part of the code checked only a variant: nothing normally
     ConditionSet health; health.set(Condition::LowHealth);
     const Event* v = variants.getEvent(1, TimePart::Noon, health);
-    CHECK(v && v->getChoices()[0].getEffects().member == "Granny");                      // member name canonicalised
+    CHECK(v && v->getChoices()[0].getEffects().member == "Granny");                      // This part of the code checked member name canonicalised
     bool sawWarning = false;
     for (const std::string& w : variants.getWarnings()) {
         sawWarning = sawWarning || w.find("only conditional variants") != std::string::npos
@@ -567,7 +567,7 @@ static void testSettings(const fs::path& tmp) {
               "\xEF\xBB\xBF# comment\r\naudio = OFF\r\nplaytest_log = yes\r\nvolume = 11\r\nplaytest_log\r\naudio = maybe\r\n");
     Settings s = Settings::load((tmp / "settings.txt").string());
     CHECK(!s.audio && s.playtestLog);
-    CHECK(s.warnings.size() == 3);                                                       // volume, missing '=', 'maybe'
+    CHECK(s.warnings.size() == 3);                                                       // This part of the code checked volume, missing '=', 'maybe'
     Settings shipped = Settings::load((fs::current_path() / "data" / "settings.txt").string());
     CHECK(shipped.warnings.empty());
 }
@@ -584,22 +584,22 @@ static void testPlaytestLog(const fs::path& tmp) {
     {
         PlaytestLog log;
         CHECK(!log.isOpen());
-        log.logRunStart();                                                               // before start(): harmless
+        log.logRunStart();                                                               // This part of the code checked before start(): harmless
         CHECK(log.start(folder.string(), "test build"));
         CHECK(log.isOpen() && log.sessionId().size() == 6);
         path = log.filePath();
         log.logRunStart();
         log.logChoice(1, "Dawn", "normal", 2, "Cook breakfast, quickly", 50, 80, 90, 95, "Stable", 4);
         log.logRunEnd("survived", 15, 3, 10, 60, 40, 50);
-    }                                                                                    // destructor closes the file
+    }                                                                                    // This part of the code checked destructor closes the file
     const std::string text = readAll(path);
     CHECK(text.find("# build: test build") != std::string::npos);
     CHECK(text.find("seconds,run,type,day,part,variant,choice,label") != std::string::npos);
     CHECK(text.find("CHOICE,1,Dawn,normal,2,\"Cook breakfast, quickly\",50,80,90,95,Stable,4") != std::string::npos);
     CHECK(text.find("END") != std::string::npos && text.find("QUIT") != std::string::npos);
     const char* personal[] = { "C:\\", "Users", "@", "atovar" };
-    for (const char* needle : personal) CHECK(text.find(needle) == std::string::npos);   // nothing personal in the file
-    PlaytestLog impossible;                                                              // a folder that cannot exist
+    for (const char* needle : personal) CHECK(text.find(needle) == std::string::npos);   // This part of the code checked nothing personal in the file
+    PlaytestLog impossible;                                                              // This part of the code checked a folder that cannot exist
     CHECK(!impossible.start((tmp / "empty.txt" / "inside_a_file").string(), "x"));
 }
 
@@ -612,7 +612,7 @@ static void testAudio(const fs::path& root) {
     audio.setMuted(false);
     CHECK(!audio.isAvailable());
     const bool started = audio.init((root / "assets" / "audio").string(), /*useNullDevice=*/true);
-    CHECK(started == AudioManager::builtWithIrrKlang());                                 // silent stub, or real engine
+    CHECK(started == AudioManager::builtWithIrrKlang());                                 // This part of the code checked silent stub, or real engine
     for (Sfx s : { Sfx::Click, Sfx::Good, Sfx::Bad, Sfx::Warning, Sfx::Death, Sfx::DayEnd, Sfx::StateChange, Sfx::Start }) audio.play(s);
     audio.setMood(Mood::Calm);
     CHECK(audio.getMood() == Mood::Calm);
@@ -634,9 +634,7 @@ static void testAudio(const fs::path& root) {
 }
 
 
-// ---------------------------------------------------------------------------------------------
 // Round 2 playtest changes: difficulty levels, scene/action animations, remembered progress
-// ---------------------------------------------------------------------------------------------
 
 static void testDifficulty() {
     begin("T27 Difficulty: Easy is gentler than Normal, Normal gentler than Hard; names, parsing, cycling");
@@ -656,11 +654,11 @@ static void testDifficulty() {
     Difficulty parsed = Difficulty::Normal;
     CHECK(parseDifficulty("HARD", parsed) && parsed == Difficulty::Hard);
     CHECK(parseDifficulty("easy", parsed) && parsed == Difficulty::Easy);
-    CHECK(!parseDifficulty("impossible", parsed) && parsed == Difficulty::Easy);          // untouched on failure
+    CHECK(!parseDifficulty("impossible", parsed) && parsed == Difficulty::Easy);          // This part of the code checked untouched on failure
     CHECK(nextDifficulty(Difficulty::Easy) == Difficulty::Normal && nextDifficulty(Difficulty::Normal) == Difficulty::Hard &&
           nextDifficulty(Difficulty::Hard) == Difficulty::Easy);
 
-    // The same party on each difficulty: a fresh journey starts with that difficulty's food, and the trail's toll follows it
+    // This part of the code checked the same party on each difficulty: a fresh journey starts with that difficulty's food, and the trail's toll follows it
     int previousToll = -1;
     for (Difficulty d : { Difficulty::Easy, Difficulty::Normal, Difficulty::Hard }) {
         Party p;
@@ -673,20 +671,20 @@ static void testDifficulty() {
         CHECK(sanityBefore - p.getSanity() == rulesFor(d).sanityPerPart);
         CHECK(wagonBefore - p.getWagon() == rulesFor(d).wagonPerPart);
         const int toll = 100 - p.getHealth();
-        CHECK(toll >= rulesFor(d).hardshipPerPart);              // frail members lose a little more than the base hardship
-        CHECK(toll >= previousToll);                             // never gentler than the easier level
+        CHECK(toll >= rulesFor(d).hardshipPerPart);              // This part of the code checked frail members lose a little more than the base hardship
+        CHECK(toll >= previousToll);                             // This part of the code checked never gentler than the easier level
         previousToll = toll;
 
-        Party copy(p);                                           // copies (used by the simulator) keep the difficulty
+        Party copy(p);                                           // This part of the code checked copies (used by the simulator) keep the difficulty
         CHECK(copy.difficulty() == d);
         Party other;
         other = p;
         CHECK(other.difficulty() == d);
-        p.reset();                                               // reset keeps the difficulty
+        p.reset();                                               // This part of the code checked reset keeps the difficulty
         CHECK(p.difficulty() == d && p.getFood() == rulesFor(d).startFood);
     }
 
-    // Starvation damage follows the difficulty too
+    // This part of the code checked starvation damage follows the difficulty too
     for (Difficulty d : { Difficulty::Easy, Difficulty::Hard }) {
         Party p; p.setDifficulty(d); p.reset();
         Effects drain; drain.food = -100;
@@ -704,16 +702,16 @@ static void testDifficulty() {
     Effects fx; fx.food = -10; fx.health = -6; fx.sanity = 4; fx.wagon = -1; fx.member = "Granny";
     const Effects ne = normal.adjusted(fx), ea = easy.adjusted(fx), ha = hard.adjusted(fx);
     CHECK(ne.member == "Granny" && ea.member == "Granny" && ha.member == "Granny");
-    CHECK(ha.food <= ne.food && ne.food <= ea.food);                   // harm: Hard hurts most (more negative)
+    CHECK(ha.food <= ne.food && ne.food <= ea.food);                   // This part of the code checked harm: Hard hurts most (more negative)
     CHECK(ha.health <= ne.health && ne.health <= ea.health);
-    CHECK(ha.sanity <= ne.sanity && ne.sanity <= ea.sanity);           // help: Hard helps least
-    CHECK(ea.wagon < 0 && ne.wagon < 0 && ha.wagon < 0);               // -1 stays a loss on every difficulty
-    CHECK(ha.food < fx.food);                                          // Hard really is harsher than the data file
+    CHECK(ha.sanity <= ne.sanity && ne.sanity <= ea.sanity);           // This part of the code checked help: Hard helps least
+    CHECK(ea.wagon < 0 && ne.wagon < 0 && ha.wagon < 0);               // This part of the code checked -1 stays a loss on every difficulty
+    CHECK(ha.food < fx.food);                                          // This part of the code checked Hard really is harsher than the data file
     Effects zero;
     CHECK(hard.adjusted(zero).isZero() && easy.adjusted(zero).isZero());
     Effects tiny; tiny.sanity = 1;
-    CHECK(hard.adjusted(tiny).sanity >= 1);                            // a +1 never rounds away
-    // What describe() reports is what apply() does, so the bracketed summary stays true
+    CHECK(hard.adjusted(tiny).sanity >= 1);                            // This part of the code checked a +1 never rounds away
+    // This part of the code checked what describe() reports is what apply() does, so the bracketed summary stays true
     Party scratch; scratch.setDifficulty(Difficulty::Hard); scratch.reset();
     const Effects landed = scratch.adjusted(fx);
     const int foodBefore = scratch.getFood();
@@ -765,8 +763,8 @@ static void testAnimations(const fs::path& root, const fs::path& tmp) {
     }
     CHECK(untaggedEvents == 0 && untaggedChoices == 0);
     CHECK(sawUnknownKeyWarning == 0);
-    for (int i = 1; i < kSceneCount; ++i) CHECK(sceneUsed[i]);          // (Trail is the default, not an event scene)
-    for (int i = 1; i <= kActionCount; ++i) CHECK(actionUsed[i]);       // no dead animations
+    for (int i = 1; i < kSceneCount; ++i) CHECK(sceneUsed[i]);          // This part of the code checked (trail is the default, not an event scene)
+    for (int i = 1; i <= kActionCount; ++i) CHECK(actionUsed[i]);       // This part of the code checked no dead animations
 
     begin("T31 A bad scene or action name only warns: the event and its choices still load");
     writeFile(tmp / "anim.txt",
@@ -804,9 +802,9 @@ static void testProgress(const fs::path& tmp) {
 
     Progress p;
     CHECK(p.scenesSeen() == 0 && p.actionsSeen() == 0 && p.endingsSeen() == 0 && p.clearedCount() == 0);
-    CHECK(p.markScene(SceneId::Deer) && !p.markScene(SceneId::Deer));         // new once, then not new
+    CHECK(p.markScene(SceneId::Deer) && !p.markScene(SceneId::Deer));         // This part of the code checked new once, then not new
     CHECK(p.markAction(ActionId::Flee) && !p.markAction(ActionId::Flee));
-    CHECK(!p.markAction(ActionId::None));                                      // "no animation" is not a discovery
+    CHECK(!p.markAction(ActionId::None));                                      // This part of the code checked "no animation" is not a discovery
     CHECK(p.markEnding(EndingId::Half) && !p.markEnding(EndingId::Half));
     p.markCleared(Difficulty::Hard);
     p.difficulty = Difficulty::Hard;
@@ -814,7 +812,7 @@ static void testProgress(const fs::path& tmp) {
     CHECK(p.scenesSeen() == 1 && p.actionsSeen() == 1 && p.endingsSeen() == 1 && p.clearedCount() == 1);
     CHECK(p.animationsSeen() == 2 && Progress::animationTotal() == kSceneCount + kActionCount);
 
-    const std::string file = (tmp / "save" / "progress.txt").string();           // a folder that doesn't exist yet
+    const std::string file = (tmp / "save" / "progress.txt").string();           // This part of the code checked a folder that doesn't exist yet
     CHECK(p.save(file));
     Progress q = Progress::load(file);
     CHECK(q.difficulty == Difficulty::Hard && q.runs == 7);
@@ -832,12 +830,12 @@ static void testProgress(const fs::path& tmp) {
                                     "actions = flee,dance\nendings = half,heaven\ncleared = easy,never\nmystery = 1\n");
     warnings.clear();
     Progress damaged = Progress::load((tmp / "damaged.txt").string(), &warnings);
-    CHECK(warnings.size() >= 7);                                              // every bad line is reported
+    CHECK(warnings.size() >= 7);                                              // This part of the code checked every bad line is reported
     CHECK(damaged.difficulty == Difficulty::Normal && damaged.runs == 0);
     CHECK(damaged.sceneSeen(SceneId::Deer) && damaged.actionSeen(ActionId::Flee) &&
-          damaged.endingSeen(EndingId::Half) && damaged.cleared(Difficulty::Easy));   // the good parts survive
+          damaged.endingSeen(EndingId::Half) && damaged.cleared(Difficulty::Easy));   // This part of the code checked the good parts survive
     CHECK(damaged.scenesSeen() == 1 && damaged.actionsSeen() == 1);
-    CHECK(!Progress().save((tmp / "save" / "progress.txt" / "inside_a_file" / "x.txt").string()));  // can't write: false, no crash
+    CHECK(!Progress().save((tmp / "save" / "progress.txt" / "inside_a_file" / "x.txt").string()));  // This part of the code checked can't write: false, no crash
 }
 
 int main(int argc, char** argv) {
@@ -847,7 +845,7 @@ int main(int argc, char** argv) {
                   << root << "\n";
         return 2;
     }
-    fs::current_path(root);  // the game and Settings use paths relative to the repo root
+    fs::current_path(root);  // This part of the code checked the game and Settings use paths relative to the repo root
 
     const fs::path tmp = fs::temp_directory_path() / "scarygon_tests";
     fs::remove_all(tmp);
