@@ -10,7 +10,7 @@ namespace {
         out += std::to_string(value);
     }
 }
-
+// This part of the code turns the choice effects into short text.
 std::string Effects::describe() const {
     std::string out;
     append(out, "Food", food);
