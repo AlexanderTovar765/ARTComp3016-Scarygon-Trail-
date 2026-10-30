@@ -1,6 +1,6 @@
-# Downloads irrKlang (sound library) into vendored/irrKlang so the game builds WITH sound.
+# This part of the code downloads irrKlang (sound library) into vendored/irrKlang so the game builds WITH sound.
 #
-# Why this is a script and not committed to the repo: irrKlang's licence lets you redistribute
+# Why I used a script and not committed to the repo: irrKlang's licence lets you redistribute
 # its DLL with a non-commercial program, but not the whole SDK archive. So the SDK stays out of
 # git (see .gitignore) and each machine fetches its own copy.
 #
