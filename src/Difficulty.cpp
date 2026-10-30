@@ -3,8 +3,8 @@
 #include <cctype>
 
 namespace {
-    // Order matches the enum: Easy, Normal, Hard.
-    // Tuned with tools/balance_sim.cpp (see docs/balance-report.md).
+    // This part of the code checks if the order matches the enum: Easy, Normal, Hard.
+    // Its tuned with tools/balance_sim.cpp (see docs/balance-report.md).
     //                                    food  eat san wag hard starve harm help
     const DifficultyRules kRules[3] = {
         /* Easy   */                    {  70,   3,  3,  2,   3,   10,  100, 100 },
