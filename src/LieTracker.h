@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-// Keeps score of how often the narrator misled the player, so the game can reveal it.
+// This part of the code keeps score of how often the narrator misled the player, so the game can reveal it.
 //
 // Playtesters did not notice the narrator lying, because the lies were subtle and never
 // pointed out. This class compares what the game WOULD have said (the truth) with what it
@@ -11,36 +11,36 @@
 // player what they were told versus what was true.
 class LieTracker {
 public:
-    // One HUD bar: what it showed and what the real value was.
+    // This part of the code is for one HUD bar: what it showed and what the real value was.
     struct Bar {
         std::string name;
         int shown = 0;
         int truth = 0;
     };
 
-    // The first difference found between true text and shown text.
+    // This part of the code is for the first difference found between true text and shown text.
     struct TextLie {
-        std::string truth;     // the word that should have been there (empty for an aside)
-        std::string shown;     // the word the player saw, or the aside the game added
-        bool isAside = false;  // true if the game added a comment rather than swapping a word
+        std::string truth;     // This part of the code is for the word that should have been there (empty for an aside)
+        std::string shown;     // This part of the code is for the word the player saw, or the aside the game added
+        bool isAside = false;  // This part of the code is true if the game added a comment rather than swapping a word
     };
 
-    // Compares the true text with the shown text. Returns true, and fills 'out', if the
+    // This part of the code compares the true text with the shown text. Returns true, and fills 'out', if the
     // shown text differs. A swapped word is preferred over an added aside as the example.
     static bool findTextLie(const std::string& truth, const std::string& shown, TextLie& out);
 
     void recordText(const std::string& truth, const std::string& shown);
     void recordBars(const std::vector<Bar>& bars);   // counts once per screen, if any bar was wrong
 
-    void startDay();   // a new day: the day's tally starts again (the journey total keeps counting)
+    void startDay();   // This part of the code sets a new day: the day's tally starts again (the journey total keeps counting)
     void reset();      // a new game
 
     int dayCount() const   { return m_day.count(); }
     int totalCount() const { return m_total.count(); }
 
-    // Plain-language reports. Always true, always short enough for the bottom panel.
+    // This part of the code is for plain-language reports. Always true, always short enough for the bottom panel.
     std::string dayReport() const;
-    std::string journeyReport() const;   // empty if the narrator never misled the player
+    std::string journeyReport() const;   // This part of the code: remains empty if the narrator never misled the player
 
 private:
     struct Tally {
