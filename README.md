@@ -266,6 +266,7 @@ save/     progress.txt, written by the game at runtime (not committed)
 - **Anonymous playtest log:** off by default. It can be turned on in `data/settings.txt` or with `L` on the title screen. It records the choices made, the result and the difficulty, with no names or personal data.
 - **Remembered progress:** the game writes `save/progress.txt` (chosen difficulty, number of runs, which animations and endings have been seen, which difficulties have been cleared). It contains no personal data, is optional, and can be deleted at any time to reset discoveries.
 - **Git evidence:** PLACEHOLDER: add a screenshot of your GitHub Insights contribution graph and of key milestone commits.
+- Many later debugging commits were made in GitHub’s web editor, which titles them “Update <file>“ by default. I wrote my notes in the description field instead (click a commit to see it). Milestone commits such as b4a77f3 and a8f589a have descriptive titles.
 
 ## 13. Evaluation
 
