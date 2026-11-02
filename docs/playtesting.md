@@ -7,9 +7,9 @@ Evidence for the brief's playtesting requirements: who tested, what was tested, 
 | Round | Who | Build | Aim | Dates |
 |---|---|---|---|---|
 | 1 | 2 testers (classmates, friends,) | 3038a1c | Find confusing text, unfair moments and bugs in the current game | Oct 23-24 |
-| 2 | 3 testers, including at least one from round 1 | b4a77f3 | Check the round 1 fixes worked and nothing new broke | Oct 28 |
+| 2 | 3 testers, including at least one from round 1 | b4a77f3 | Check the round 1 fixes worked and nothing new broke | Oct 28-29 |
 
-How a session runs: about 15-20 minutes. The tester plays without help while I fill in the observation sheet, then they fill in the questionnaire alone, then I ask what the best moment was and what they would change first. The observation sheet and questionaire are in `docs/playtest/`.
+How a session runs: about 15-20 minutes. The tester plays without help while I fill in the observation sheet, then they fill in the questionnaire alone, then I ask what the best moment was and what they would change first. 
 
 ## Automated and developer testing (not human playtesting)
 
@@ -26,8 +26,8 @@ These are real results, but they test the rules and the code, not how people rea
 
 | Tester | Date | Who | Build (commit) | Time played | Got to |
 |---|---|---|---|---|---|
-| A | 23/10/26 | User 1 (friend) | 3038a1c | 5min 44sec | Day 3 End |
-| B | 23/10/26 | User 2 (friend) | 3038a1c | 5min 15sec | Day 3 End |
+| A | 25/10/26 | User 1 (friend) | 3038a1c | 5min 44sec | Day 3 End |
+| B | 25/10/26 | User 2 (friend) | 3038a1c | 5min 15sec | Day 3 End |
 | C | 28/10/26 | User 3 (friend) | b4a77f3 | 4min 12sec | Day 2 Part 5 |
 | D | 28/10/26 | User 4 (classmate) | b4a77f3 | 4min 47sec | Day 3 End |
 | E | 29/10/26 | User 1 (friend) | b4a77f3 | 4min 32sec | Day 3 Part 3 |
@@ -68,9 +68,9 @@ Rated 1 (strongly disagree) to 5 (strongly agree).
 
 ## Playtesting reflection
 
-- **Who participated:** 5 Playtesters over 2 weeks, 4 friends and 1 from class.
+- **Who participated:** 4 Playtesters over 2 weeks, 3 friends and 1 from class.
 - **What was tested:** One full playthrough of the game at their own pace, no help
 - **Feedback received:** All my testers liked the game and the quirky style, with biggest complaints coming from lying text not being more exemplified and the game being too easy and not offering enough to replay.
 - **Changes implemented:** The lying text was made more apparent so users would know when the game was working against them, and a difficulty setting was put in along with new animations so the player would want to keep playing and try new combinations.
-- **Remaining limitations:** With more time to work on the game, I would implement more days and another character and stat to mix up the game. I would also work to make the graphics look better, however it being my first use of SDL3 I was limited.
+- **Remaining limitations:** The difficulty levels and new animations were added after round 2, so they have not been playtested yet. The balance simulator is the only evidence so far that they fix “too easy”. With more time to work on the game, I would implement more days and another character and stat to mix up the game. I would also work to make the graphics look better, however it being my first use of SDL3 I was limited.
 
