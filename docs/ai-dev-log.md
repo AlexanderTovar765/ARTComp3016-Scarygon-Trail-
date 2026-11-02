@@ -1,13 +1,13 @@
 # AI Development Log: The Scarygon Trail
 
-This element is **Partnered Work**: AI was an integral part of development, and this log is meant to make that use transparent. AI wrote most of the code, art, sound script and first-draft documentation. My role was the concept, design decisions, directing and correcting the AI, building and playing every version in Visual Studio 2022, running the playtests, and deciding what to change from the feedback.
+This element is **Partnered Work**: AI was used in partnership with myself, and this log is meant to make that use transparent. AI wrote most of the code, art, sound script and first-draft documentation. My role was the concept, design decisions, directing and correcting the AI, building and playing every version in Visual Studio 2022, running the playtests, and deciding what to change from the feedback.
 
 ## 1. AI tools used
 
 | Tool | Used for |
 |---|---|
 | Claude (Anthropic), via claude.ai | Most of the C++ code, all code-drawn art and animation, UI screens, the sound synthesis script, event text drafts, balancing, refactoring, automated tests, debugging, and drafting the README and docs |
-| ChatGPT (OpenAI), via ChatGPT.com | [CHECK: what you really used it for, e.g. early concept and proposal drafting] |
+| ChatGPT (OpenAI), via ChatGPT.com | Tried early on, as planned in my proposal, but its output was not useful, so none of it was used in the project. I switched to Claude |
 
 No image, music or audio generation models were used. All artwork is C++ drawing code (rectangles, circles, lines) written by AI, and all sound comes from a Python synthesis script written by AI that I ran. The only third-party library besides SDL3 is irrKlang, which the brief lists as permitted.
 
@@ -20,12 +20,12 @@ Each row is one of the uses the brief lists, plus the "code assistant", "program
 | Sprite generation and character artwork | Code-drawn family portraits (Ma, Pa, Junior, Granny), the wagon and oxen, and a scene for each of the 15 events. There are no image files: every "sprite" is drawn from shapes in C++ | Described what each scene and character should show, checked them in screenshots and in game, and asked for fixes (e.g. sun and hills drawn outside the frame, fixed with a clip rectangle) | `src/SceneRenderer.*`, `src/SceneActors.*` |
 | Sprite animation | 20 choice reactions, the title-screen wagon, and the pixel-art pass (scene drawn to a small texture and scaled up) | Asked for animations after round 2 testers saw no reason to replay, chose the pixel-art look, and reported shapes vanishing at low resolution (now drawn from square blocks) | `src/SceneActors.*`, `src/Animations.*`, `SceneRenderer::beginPixelPass` |
 | UI assets | Buttons, stat bars, NARRATOR meter, title, how-to-play, result, day summary, narrator-shift and ending screens | Designed the split-panel layout (graphics on top, text and choices below), asked for the title and instructions screens, and asked for the meter after round 1 testers missed the lying | `src/Game.*`, `src/Button.*`, `src/TextRenderer.*` |
-| Narration and dialogue | Drafts of event text, choice labels, result lines, warnings, the narrator's lies and the end-of-day truth checks | Set the concept and the deadpan comedic-horror tone, wrote example prompts the events had to match, and edited the drafts. [CHECK: name any events you wrote or rewrote yourself] | `data/events.txt`, `src/NarrativeState.*`, `src/LieTracker.*` |
+| Narration and dialogue | Drafts of event text, choice labels, result lines, warnings, the narrator's lies and the end-of-day truth checks | Set the concept and the deadpan comedic-horror tone, wrote example prompts the events had to match, and edited the drafts, including the Day 1 events | `data/events.txt`, `src/NarrativeState.*`, `src/LieTracker.*` |
 | Sound effects | `make_sounds.py`, which synthesises the ambience and effects, and the code that changes ambience with the narrator state | Ran the script and the irrKlang download, rebuilt, and checked the sound on my machine | `tools/make_sounds.py`, `src/AudioManager.*` |
 | Balancing suggestions | A balance simulator (20,000 games per strategy), tolls, thresholds and the Easy/Normal/Hard numbers | Decided the game was too easy when the first run showed 99.9% survival, and acted on playtesters rating difficulty 1 by asking for difficulty levels | `tools/balance_sim.cpp`, `src/Difficulty.*`, `docs/balance-report.md` |
 | Optimisation suggestions | Drawing each scene once into a small texture and scaling it up; a per-screen seed so the lying text is worked out once per screen instead of flickering every frame; keeping irrKlang out of the header (Pimpl) | Checked the game ran smoothly in Visual Studio | `SceneRenderer`, `NarrativeState`, `AudioManager::Impl` |
 | Refactoring assistance | Replacing the proposal's linked `TrailNode` list with events keyed by (day, part); splitting the party into four `PartyMember` objects with an Observer for warnings; turning difficulty into one table of numbers so `Party` never branches on it; adding CMake support | Chose to scale the game to 3 days x 5 parts, and kept State and Observer from my proposal | `src/Trail.*`, `src/Party*.*`, `src/Difficulty.*` |
-| Code generation (code assistant) | Most of the source files | Directed each feature, built and ran every version, made my own edits to Button, Conditions, Effects and Event (19-22 Oct), and can explain the code (section 8) | `src/` |
+| Code generation (code assistant) | Most of the source files | Directed each feature, built and ran every version, rewrote the code comments in my own words while reading through the code (Button, Conditions, Effects and Event on 19-22 Oct, and the rest of `src/` on 30 Oct), and can explain the code (section 8) | `src/` |
 | Testing (programming testing) | `tests/logic_tests.cpp` (22,238 checks), headless playthroughs and screenshot checks run in the AI's own environment | Played every build myself and ran two rounds of human playtesting | `tests/`, `docs/test-cases.md`, `docs/playtesting.md` |
 | Debugging | Fixes for build errors, leftover merge-conflict markers and git push failures | Pasted build logs and errors, and confirmed the fixes worked in Visual Studio | |
 | Documentation (readme report crafting) | Drafts of the proposal, README, test cases, balance report and playtesting forms | Edited them, filled in playtest results, and wrote the evaluation | `README.md`, `docs/` |
@@ -123,7 +123,8 @@ Done by me:
 | `958ec60` | Update README status for Week 3 |
 | `1b3f873` | Add Days 2-3, sanity-driven narrator, wagon scene art, balance simulator and playtesting docs |
 | `8a817cf` | 18 Oct | Add PartyMember and Observer pattern: named family, threshold warnings, desperate event variants |
-| `c18e610`, `eb41fe3`, `5442df8`, `03cfc81`, `bf5bb5d`, `3038a1c` | 19-22 Oct | My own edits to Button, Conditions, Effects and Event (see AI Development Log for what I changed by hand). `3038a1c` is the build used for playtest round 1. |
+| `c18e610`, `eb41fe3`, `5442df8`, `03cfc81`, `bf5bb5d`, `3038a1c` | 19-22 Oct | I rewrote the comments in Button, Conditions, Effects and Event in my own words while reading through the code. `3038a1c` is the build used for playtest round 1. |
+| 30 Oct commits ("Update <file>") | 30 Oct | Rewrote the comments across `src/`, `tests/` and `tools/` in my own words to check I understood each file before the video walkthrough. |
 | `b4a77f3` | 25 Oct | Make the lying narrator noticeable: trust meter, narrator-shift screen, end-of-day truth check. **Response to round 1** (players did not notice the narrator lying). This is the build used for round 2. |
 | `a8f589a` | 28 Oct | Round 2 feedback: add Easy/Normal/Hard difficulty, per-event scenes, per-choice reaction animations, remembered discoveries and pixel-art rendering. **Response to round 2** (difficulty rated 1, no reason to replay). |
 | `8fe6f85` | 28 Oct | Update balance-report.md (results for all three difficulties) |
