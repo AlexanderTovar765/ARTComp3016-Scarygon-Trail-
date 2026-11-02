@@ -64,11 +64,11 @@ Rated 1 (strongly disagree) to 5 (strongly agree).
 
 | Feedback (tester) | Issue | Change made | Commit |
 |---|---|---|---|
-| 1.First round of users overall enjoyed the game and were able to finish it. 2.Second round of users provided new points of view while also helping to know the new changes improved the game from round 1. | 1.The game lying to the players was not picked up on. 2.The users felt the game was too easy and the game could have more in it overall. | 1.Make the lying text more apparent either with sarcastic phrases or something more blatant. 2.Created a difficulty setting to allow players to make the game easier or harder to reach the end, also created new animations to immerse the player more. | 1.Committed October 25th. 2.Committed October 28th |
+| 1.First round of users overall enjoyed the game and were able to finish it. 2.Second round of users provided new points of view while also helping to know the new changes improved the game from round 1. | 1.The game lying to the players was not picked up on. 2.The users felt the game was too easy and the game could have more in it overall. | 1.Make the lying text more apparent either with sarcastic phrases or something more blatant. 2.Created a difficulty setting to allow players to make the game easier or harder to reach the end, also created new animations to immerse the player more. | 1.b4a77f3 (25 Oct) 2. a8f589a (28 Oct) |
 
 ## Playtesting reflection
 
-- **Who participated:** 4 Playtesters over 2 weeks, 3 friends and 1 from class.
+- **Who participated:** 4 playtesters (3 friends and 1 from class) over 5 sessions in one week, 23–29 October. Tester E was Tester A returning.
 - **What was tested:** One full playthrough of the game at their own pace, no help
 - **Feedback received:** All my testers liked the game and the quirky style, with biggest complaints coming from lying text not being more exemplified and the game being too easy and not offering enough to replay.
 - **Changes implemented:** The lying text was made more apparent so users would know when the game was working against them, and a difficulty setting was put in along with new animations so the player would want to keep playing and try new combinations.
