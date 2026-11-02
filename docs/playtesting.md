@@ -7,7 +7,7 @@ Evidence for the brief's playtesting requirements: who tested, what was tested, 
 | Round | Who | Build | Aim | Dates |
 |---|---|---|---|---|
 | 1 | 2 testers (classmates, friends,) | 3038a1c | Find confusing text, unfair moments and bugs in the current game | Oct 23-24 |
-| 2 | 3 testers, including at least one from round 1 | b4a77f3 | Check the round 1 fixes worked and nothing new broke | Oct 28-29 |
+| 2 | 3 testers, including at least one from round 1 | b4a77f3 | Check the round 1 fixes worked and nothing new broke | Oct 28 |
 
 How a session runs: about 15-20 minutes. The tester plays without help while I fill in the observation sheet, then they fill in the questionnaire alone, then I ask what the best moment was and what they would change first. The forms are in `docs/playtest/`.
 
