@@ -9,7 +9,7 @@ Evidence for the brief's playtesting requirements: who tested, what was tested, 
 | 1 | 2 testers (classmates, friends,) | 3038a1c | Find confusing text, unfair moments and bugs in the current game | Oct 23-24 |
 | 2 | 3 testers, including at least one from round 1 | b4a77f3 | Check the round 1 fixes worked and nothing new broke | Oct 28 |
 
-How a session runs: about 15-20 minutes. The tester plays without help while I fill in the observation sheet, then they fill in the questionnaire alone, then I ask what the best moment was and what they would change first. The forms are in `docs/playtest/`.
+How a session runs: about 15-20 minutes. The tester plays without help while I fill in the observation sheet, then they fill in the questionnaire alone, then I ask what the best moment was and what they would change first. The observation sheet and questionaire are in `docs/playtest/`.
 
 ## Automated and developer testing (not human playtesting)
 
@@ -17,8 +17,8 @@ These are real results, but they test the rules and the code, not how people rea
 
 | What | How | Result |
 |---|---|---|
-| Difficulty and balance | `tools/balance_sim.cpp` plays 20,000 games per strategy (Random, Greedy, Cautious, Reckless) | Random play survives 67.1% of runs and loses 0.19 family members on average. Greedy and Cautious survive 100%. Reckless survives 0%. See [balance-report.md](balance-report.md) |
-| Rules and loaders | `tests/logic_tests.cpp`, 25 test groups | 14,202 checks, all passing. See [test-cases.md](test-cases.md) |
+| Difficulty and balance | `tools/balance_sim.cpp` plays 20,000 games per strategy (Random, Greedy, Cautious, Reckless) on each difficulty | Random play survives 88.9% on Easy, 48.3% on Normal and 5.8% on Hard. Greedy and Cautious always survive and Reckless never does. See `balance-report.md` |
+| Rules and loaders | `tests/logic_tests.cpp` | 22,238 checks, all passing. See `test-cases.md` |
 | Layout and flow | Scripted headless playthroughs to every ending, with screenshots | Pass |
 | My own play testing | 19/10/26-Error with buttons | debugged and now work properly |
 
@@ -64,11 +64,11 @@ Rated 1 (strongly disagree) to 5 (strongly agree).
 
 | Feedback (tester) | Issue | Change made | Commit |
 |---|---|---|---|
-| 1.First round of users overall enjoyed the game and were able to finish it. 2.Second round of users provided new points of view while also helping to know the new changes improved the game from round 1. | 1.The game lying to the players was not picked up on. 2.The users felt the game was too easy and the game could have more in it overall. | 1.Make the lying text more apparent either with sarcastic phrases or something more blatant. 2.Created a difficulty setting to allow players to make the game easier or harder to reach the end, also created new animations to immerse the player more. | 1.Committed October 24th. 2.Committed October 25th-26th |
+| 1.First round of users overall enjoyed the game and were able to finish it. 2.Second round of users provided new points of view while also helping to know the new changes improved the game from round 1. | 1.The game lying to the players was not picked up on. 2.The users felt the game was too easy and the game could have more in it overall. | 1.Make the lying text more apparent either with sarcastic phrases or something more blatant. 2.Created a difficulty setting to allow players to make the game easier or harder to reach the end, also created new animations to immerse the player more. | 1.Committed October 25th. 2.Committed October 28th |
 
 ## Playtesting reflection
 
-- **Who participated:** 5 Playtesters over 2 weeks, 5 friends and 1 from class.
+- **Who participated:** 5 Playtesters over 2 weeks, 4 friends and 1 from class.
 - **What was tested:** One full playthrough of the game at their own pace, no help
 - **Feedback received:** All my testers liked the game and the quirky style, with biggest complaints coming from lying text not being more exemplified and the game being too easy and not offering enough to replay.
 - **Changes implemented:** The lying text was made more apparent so users would know when the game was working against them, and a difficulty setting was put in along with new animations so the player would want to keep playing and try new combinations.
