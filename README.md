@@ -109,13 +109,12 @@ Playthroughs differ because the choices lead to different stats, different despe
 ## 6. Use of AI/AI Development Log
 
 My proposal planned to use ChatGPT, but when I tried it the output was not useful, so I used none of it and switched to Claude. This element is Partnered Work, and Claude wrote most of the C++ code, the code-drawn art and animations, the sound synthesis script, the tests, the balance simulator and drafts of the documentation. I made the design decisions: the comedic-horror tone, the split-panel layout, the three-day structure, and that the unreliable narration changes only what is shown, never what choices do.
+
 I built and played every version in Visual Studio 2022 and checked the AI’s output. For example, the first balance simulation showed 99.9% survival for random play, so tolls and starvation penalties were added. One test predicted the wrong health loss because its arithmetic was wrong, so the test was fixed rather than the game. The lying text sometimes did not change, so it now always swaps at least one word. Playtesting led to the biggest changes (section 11). I also read through every source file and rewrote its comments in my own words.
-The full account is in the AI Development Log `(docs/ai-dev-log.md)`.
 
+The full account is in the AI Development Log [docs/ai-dev-log.md].
 
-The full account is in the AI Development Log (section 7). The signed Generative AI Declaration is included as an appendix: https://liveplymouthac-my.sharepoint.com/:w:/r/personal/alexander_tovar_students_plymouth_ac_uk/Documents/Generative%20AI%20Tool%20declaration%20template%20-%20All%20-%20v1.0.docx?d=wd999a88252224706b1061d8d156a7792&csf=1&web=1&e=hTR9pb
-
-See [docs/ai-dev-log.md](docs/ai-dev-log.md) for the AI tools used, categories of use, example prompts, the verification process, and repository evidence.
+The signed Generative AI Declaration is included as a PDF appendix in my DLE submission.
 
 ## 7. Game programming patterns
 
