@@ -13,16 +13,14 @@ At every point along the route, there are brief narrative events in a monotonous
 3. [Gameplay description](#3-gameplay-description)
 4. [Sample screens](#4-sample-screens)
 5. [Dependencies](#5-dependencies)
-6. [Use of AI](#6-use-of-ai)
-7. [AI Development Log](#7-ai-development-log)
-8. [Game programming patterns](#8-game-programming-patterns)
-9. [Game mechanics and how they are coded](#9-game-mechanics-and-how-they-are-coded)
-10. [UML design diagram](#10-uml-design-diagram)
-11. [Exception handling and test cases](#11-exception-handling-and-test-cases)
-12. [Playtesting evidence and reflection](#12-playtesting-evidence-and-reflection)
-13. [Further details](#13-further-details)
-14. [Evaluation](#14-evaluation)
-
+6. [Use of AI / AI Development Log](#6-use-of-aiai-development-log)
+7. [Game programming patterns](#7-game-programming-patterns)
+8. [Game mechanics and how they are coded](#8-game-mechanics-and-how-they-are-coded)
+9. [UML design diagram](#9-uml-design-diagram)
+10. [Exception handling and test cases](#10-exception-handling-and-test-cases)
+11. [Playtesting evidence and reflection](#11-playtesting-evidence-and-reflection)
+12. [Further details](#12-further-details)
+13. [Evaluation](#13-evaluation)
 ## 1. How to run
 
 **From the submitted zip (no Visual Studio needed, Windows x64):** unzip, open the folder, and run `ScarygonTrail.exe` from inside it. The executable needs `SDL3.dll`, the irrKlang DLLs, the `data/` folder and the `assets/audio/` folder beside it, and the zip includes all of them.
@@ -110,8 +108,10 @@ Playthroughs differ because the choices lead to different stats, different despe
 
 ## 6. Use of AI/AI Development Log
 
-I have used ChatGPT originally then swapped to Claude as I mentioned in my AI log. Although it was mentioned in my project proposal, I have noted how I have used it in my work on this project. For instance, AI helped in writing various parts of my C++ code, documentation, the text of the event, various types of tests, balance simulator, and sound script. I took important decisions about design such as humorous horror tone, split-panel layout, three-day framework, and that unreliable narration impacts just the presentational aspect but does not affect gameplay. For example, I had balance simulator showing 99.9% survival with random gameplay, so I had the idea to add penalties for tolls and starvation. One of the tests also predicted that the wrong health is going to be decreased because of incorrect arithmetic, so I had to fix the test rather than the game code. Lastly, I have made the unreliable narration that shifts at least one word.
-My contributions can be tracked in commits like 587643e, bbf2a29, and 1b3f873 where I worked on the event loader, Day 1 events, Days 2 and 3 with the narrator and the balance simulator. I have checked the work done by AI by compiling
+My proposal planned to use ChatGPT, but when I tried it the output was not useful, so I used none of it and switched to Claude. This element is Partnered Work, and Claude wrote most of the C++ code, the code-drawn art and animations, the sound synthesis script, the tests, the balance simulator and drafts of the documentation. I made the design decisions: the comedic-horror tone, the split-panel layout, the three-day structure, and that the unreliable narration changes only what is shown, never what choices do.
+I built and played every version in Visual Studio 2022 and checked the AI’s output. For example, the first balance simulation showed 99.9% survival for random play, so tolls and starvation penalties were added. One test predicted the wrong health loss because its arithmetic was wrong, so the test was fixed rather than the game. The lying text sometimes did not change, so it now always swaps at least one word. Playtesting led to the biggest changes (section 11). I also read through every source file and rewrote its comments in my own words.
+The full account is in the AI Development Log `(docs/ai-dev-log.md)`.
+
 
 The full account is in the AI Development Log (section 7). The signed Generative AI Declaration is included as an appendix: https://liveplymouthac-my.sharepoint.com/:w:/r/personal/alexander_tovar_students_plymouth_ac_uk/Documents/Generative%20AI%20Tool%20declaration%20template%20-%20All%20-%20v1.0.docx?d=wd999a88252224706b1061d8d156a7792&csf=1&web=1&e=hTR9pb
 
