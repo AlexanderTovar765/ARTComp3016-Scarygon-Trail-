@@ -5,7 +5,7 @@ An amusing survival horror game that has been influenced by William’s *Oregon 
 At every point along the route, there are brief narrative events in a monotonous delivery, regardless of the event, whether it involves a broken wagon wheel or something of that sort. It challenges players to keep a family of four alive by managing their food, health, sanity, and wagon condition, and to experience the consequences of their actions.
 
 **Repository:** https://github.com/AlexanderTovar765/ARTComp3016-Scarygon-Trail-
-**Video (unlisted YouTube, max 10 minutes):** PLACEHOLDER: add the YouTube link
+**Video (unlisted YouTube, max 10 minutes):** https://youtu.be/2qJWDnIn5mI
 
 ## Contents
 1. [How to run](#1-how-to-run)
