@@ -110,7 +110,7 @@ Playthroughs differ because the choices lead to different stats, different despe
 
 ## 6. Use of AI/AI Development Log
 
-I have used ChatGPT as I mentioned in my AI log. Although it was mentioned in my project proposal, I have noted how I have used it in my work on this project. For instance, AI helped in writing various parts of my C++ code, documentation, the text of the event, various types of tests, balance simulator, and sound script. I took important decisions about design such as humorous horror tone, split-panel layout, three-day framework, and that unreliable narration impacts just the presentational aspect but does not affect gameplay. For example, I had balance simulator showing 99.9% survival with random gameplay, so I had the idea to add penalties for tolls and starvation. One of the tests also predicted that the wrong health is going to be decreased because of incorrect arithmetic, so I had to fix the test rather than the game code. Lastly, I have made the unreliable narration that shifts at least one word.
+I have used ChatGPT originally then swapped to Claude as I mentioned in my AI log. Although it was mentioned in my project proposal, I have noted how I have used it in my work on this project. For instance, AI helped in writing various parts of my C++ code, documentation, the text of the event, various types of tests, balance simulator, and sound script. I took important decisions about design such as humorous horror tone, split-panel layout, three-day framework, and that unreliable narration impacts just the presentational aspect but does not affect gameplay. For example, I had balance simulator showing 99.9% survival with random gameplay, so I had the idea to add penalties for tolls and starvation. One of the tests also predicted that the wrong health is going to be decreased because of incorrect arithmetic, so I had to fix the test rather than the game code. Lastly, I have made the unreliable narration that shifts at least one word.
 My contributions can be tracked in commits like 587643e, bbf2a29, and 1b3f873 where I worked on the event loader, Day 1 events, Days 2 and 3 with the narrator and the balance simulator. I have checked the work done by AI by compiling
 
 The full account is in the AI Development Log (section 7). The signed Generative AI Declaration is included as an appendix: https://liveplymouthac-my.sharepoint.com/:w:/r/personal/alexander_tovar_students_plymouth_ac_uk/Documents/Generative%20AI%20Tool%20declaration%20template%20-%20All%20-%20v1.0.docx?d=wd999a88252224706b1061d8d156a7792&csf=1&web=1&e=hTR9pb
@@ -248,7 +248,7 @@ Evidence (session log, observation notes, questionnaire results) is in [docs/pla
   - The jokes divided testers, and the humour was not changed.
   - With more time I would add more days and another character and stat, and improve the graphics further, though this was my first use of SDL3.
 
-## 12. Further details-COME BACK TO
+## 12. Further details
 
 - **Project structure**
 
