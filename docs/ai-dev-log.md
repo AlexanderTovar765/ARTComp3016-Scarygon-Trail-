@@ -46,7 +46,7 @@ Each row is one of the uses the brief lists, plus the "code assistant", "program
 
 ### Week 2: proposal and skeleton
 - **AI did:** drafted the proposal sections, suggested the layout of the UML sketch, and wrote the SDL3 split-panel skeleton.
-- **I decided:** the concept, the comedic-horror tone, the two-panel layout, and what went into the proposal.
+- **I decided:** the concept, the comedic-horror tone, the two-panel layout, what went into the proposal, and additions to the SDL3 skeleton.
 - **Verified:** I ran the skeleton in Visual Studio and saw the window and panels.
 - **Issue and fix:** the first roadmap went beyond the 6 weeks available and had to be scaled back.
 
@@ -59,14 +59,14 @@ Each row is one of the uses the brief lists, plus the "code assistant", "program
 
 ### Week 4: three days, State pattern, art, balance
 - **AI did:** drafted Days 2-3 so they build on Day 1's events, wrote `NarrativeState` (Stable / Unreliable / Breakdown by sanity), the code-drawn wagon scene and the balance simulator.
-- **I decided:** sanity only changes presentation, never what choices do, so the game never cheats the player.
+- **I did:** sanity only changes presentation, never what choices do, so the game never cheats the player and verified additions to game.
 - **Verified:** the simulator plays thousands of games with four strategies. The first results showed 99.9% survival for random play, so tolls were added.
 - **Issue and fix:** the sun and hills spilled out of the picture frame; a clip rectangle fixed it (found from screenshots).
 - **Issue and fix:** lying text sometimes did not change at all; it now always swaps at least one word.
 
 ### Week 5: Observer, party members, screens, sound, playtest log
 - **AI did:** suggested what to add to make the game more user friendly, then wrote `PartyMember`, the Observer watchers, desperate events, the title and how-to-play screens, the portraits, the sound script and `AudioManager`, and the playtest log.
-- **I did:** chose which suggestions to keep, pushed the work, ran the irrKlang download script, rebuilt, and confirmed sound on my machine.
+- **I did:** chose which suggestions to keep, pushed the work, ran the irrKlang download script, rebuilt, and confirmed sound on my machines.
 - **Verified:** 25 automated test groups (14,202 checks) passed with the silent audio stub and with real irrKlang; the AI ran headless playthroughs to every ending and checked screenshots; the balance simulation was re-run (Random play 67.1% survival).
 - **Issue and fix:** a test expected a full party's health to drop by 3 per part. My arithmetic, and the AI's, was wrong; the average drops by 4 because frailer members take more damage. The test was corrected, not the code.
 
